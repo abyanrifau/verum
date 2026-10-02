@@ -1,0 +1,194 @@
+---
+import { Picture } from 'astro:assets';
+import Base from '../layouts/Base.astro';
+import { editorialImage, products, brands } from '../lib/catalog';
+import { photo } from '../data/photos';
+import { storeLd, breadcrumbLd } from '../lib/seo';
+
+const lab = photo('lab');
+const texture = photo('texture');
+const published = products.filter((p) => p.keyIngredients.some((k) => k.concentration)).length;
+const rows = products.reduce((n, p) => n + p.keyIngredients.length, 0);
+const npRows = products.reduce((n, p) => n + p.keyIngredients.filter((k) => !k.concentration).length, 0);
+const criteria = [
+  { t: 'We read the whole formula.', d: 'Every ingredient list, in order, from the brand’s own site or packaging. Not the marketing page, the list.' },
+  { t: 'We check what the brand publishes.', d: 'Strengths are recorded only where the brand states them. Where it states nothing, we write Not published.' },
+  { t: 'We buy direct.', d: 'From the brand or its authorised distributor, with a record for every batch. Never from grey-market resellers.' },
+  { t: 'We test it in Malé.', d: 'Heat, humidity and daily sunscreen change how a texture behaves. If it pills, slides or stings here, it does not make the shelf.' },
+  { t: 'We say what it is not.', d: 'No medical claims, no miracle language. A serum hydrates or it does not; a sunscreen protects when you reapply it.' },
+];
+---
+
+<Base
+  title="Philosophy · Formula first · VERUM"
+  description="How VERUM chooses what to stock, why every product page shows its formula, and why no brand can pay for placement. Formula first."
+  ogImage="/og/philosophy.png"
+  jsonld={[storeLd(), breadcrumbLd([{ name: 'Home', url: '/' }, { name: 'Philosophy', url: '/philosophy' }])]}
+>
+  <div class="wrap page-head ph-head">
+    <p class="eyebrow">Philosophy</p>
+    <h1>Formula first.</h1>
+    <p class="lede">We read the formula before we agree to stock anything. Then we publish what we read, including the gaps.</p>
+    <div class="page-head-actions">
+      <a class="btn" href="/quiz">Find your routine in 30 seconds</a>
+      <a class="btn btn--ghost" href="/shop">Shop all</a>
+    </div>
+  </div>
+
+  <section class="section" aria-labelledby="ph-choose">
+    <div class="wrap ph-grid">
+      <div>
+        <h2 id="ph-choose">How we choose what to stock</h2>
+        <p class="muted ph-intro">{products.length} products from {brands.length} brands passed these five checks. Many more did not.</p>
+      </div>
+      <ol role="list" class="ph-steps">
+        {
+          criteria.map((c, i) => (
+            <li class="reveal">
+              <span class="mono ph-n">{String(i + 1).padStart(2, '0')}</span>
+              <div>
+                <p class="ph-t">{c.t}</p>
+                <p class="ph-d">{c.d}</p>
+              </div>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </section>
+
+  <section class="section section--bone" aria-labelledby="ph-publish">
+    <div class="wrap ph-split">
+      <figure class="ph-fig">
+        <Picture src={editorialImage('lab')} formats={['avif', 'webp']} fallbackFormat="webp" widths={[400, 700, 1000]} sizes="(min-width: 900px) 45vw, 100vw" alt={lab.alt} loading="lazy" />
+        <figcaption class="label">Photo: {lab.photographer} on {lab.site}</figcaption>
+      </figure>
+      <div class="ph-copy">
+        <h2 id="ph-publish">Why we publish the breakdowns</h2>
+        <p>Most shops show a product photo and a list of claims. We show the key ingredients and, where the brand publishes them, their strengths, on a lab-style scale you can compare across brands.</p>
+        <p>Where a brand publishes nothing, the row says so. We do not estimate. Of {rows} key-ingredient rows across the shop, {npRows} read Not published. That number is not a failure; it is the honest state of skincare labelling.</p>
+        <dl class="ph-stats">
+          <div><dt class="mono">Products with at least one published strength</dt><dd class="mono">{published} of {products.length}</dd></div>
+          <div><dt class="mono">Rows marked Not published</dt><dd class="mono">{npRows} of {rows}</dd></div>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="ph-sponsor">
+    <div class="wrap ph-split ph-split--rev">
+      <div class="ph-copy">
+        <h2 id="ph-sponsor">No sponsored placements</h2>
+        <p>No brand pays to be listed, ranked, featured or recommended. Bestsellers are ranked by units sold. Quiz results are ranked by a scoring function that shows its reasons on every pick.</p>
+        <p>Brands that want to be stocked can write to us. The answer depends on the formula, the supply chain and how it behaves in Malé, not on a fee.</p>
+      </div>
+      <figure class="ph-fig">
+        <Picture src={editorialImage('texture')} formats={['avif', 'webp']} fallbackFormat="webp" widths={[400, 700, 1000]} sizes="(min-width: 900px) 45vw, 100vw" alt={texture.alt} loading="lazy" />
+        <figcaption class="label">Photo: {texture.photographer} on {texture.site}</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="section section--bone ph-cta" aria-labelledby="ph-cta">
+    <div class="wrap">
+      <h2 id="ph-cta">Start with your skin, not a shelf.</h2>
+      <p class="lede">Three taps build a full routine from this range, with the reasons shown.</p>
+      <div class="page-head-actions">
+        <a class="btn btn--xl" href="/quiz">Find your routine in 30 seconds</a>
+        <a class="btn btn--xl btn--ghost" href="/shop">Shop all</a>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .ph-head h1 {
+    font-size: clamp(2.5rem, 1.6rem + 5vw, 6rem);
+  }
+  .ph-grid {
+    display: grid;
+    gap: 24px;
+  }
+  .ph-intro {
+    margin-top: 10px;
+    max-width: 40ch;
+  }
+  .ph-steps {
+    border-top: 1px solid var(--ink);
+  }
+  .ph-steps li {
+    display: grid;
+    grid-template-columns: 52px minmax(0, 1fr);
+    gap: 12px;
+    padding: 18px 0;
+    border-bottom: 1px solid var(--hairline);
+  }
+  .ph-n {
+    font-size: var(--fs-20);
+    color: var(--sage-deep);
+  }
+  .ph-t {
+    font-weight: 600;
+    font-size: var(--fs-20);
+    letter-spacing: -0.02em;
+  }
+  .ph-d {
+    color: var(--graphite);
+    margin-top: 4px;
+    max-width: 60ch;
+  }
+  .ph-split {
+    display: grid;
+    gap: 24px;
+    align-items: center;
+  }
+  .ph-fig {
+    margin: 0;
+    display: grid;
+    gap: 6px;
+  }
+  .ph-fig :global(img) {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+  }
+  .ph-copy {
+    display: grid;
+    gap: 14px;
+    max-width: 60ch;
+  }
+  .ph-stats {
+    margin: 8px 0 0;
+    border-top: 1px solid var(--ink);
+  }
+  .ph-stats div {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--hairline);
+    font-size: var(--fs-13);
+  }
+  .ph-stats dd {
+    margin: 0;
+    font-weight: 600;
+  }
+  .ph-cta .wrap {
+    display: grid;
+    gap: 12px;
+    justify-items: start;
+  }
+  @media (min-width: 900px) {
+    .ph-grid {
+      grid-template-columns: 0.8fr 1.2fr;
+      gap: 56px;
+    }
+    .ph-split {
+      grid-template-columns: 1fr 1fr;
+      gap: 56px;
+    }
+    .ph-split--rev .ph-copy {
+      order: -1;
+    }
+  }
+</style>

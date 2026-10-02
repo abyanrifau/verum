@@ -1,0 +1,64 @@
+---
+import type { GetStaticPaths } from 'astro';
+import Base from '../../layouts/Base.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import ProductGrid from '../../components/ProductGrid.astro';
+import TrustStrip from '../../components/TrustStrip.astro';
+import { brands, productsByBrand, productUrl } from '../../lib/catalog';
+import { itemListLd, breadcrumbLd } from '../../lib/seo';
+import type { Brand } from '../../data/types';
+
+export const getStaticPaths = (() => brands.map((b) => ({ params: { slug: b.slug }, props: { b } }))) satisfies GetStaticPaths;
+const { b } = Astro.props as { b: Brand };
+const list = productsByBrand(b.slug).sort((x, y) => x.salesRank - y.salesRank);
+const crumbs = [
+  { name: 'Home', url: '/' },
+  { name: 'Brands', url: '/brands' },
+  { name: b.name, url: `/brands/${b.slug}` },
+];
+const host = new URL(b.website).hostname.replace(/^www\./, '');
+const title = `${b.name} skincare in Malé · VERUM`;
+const desc = `${b.name} at VERUM: ${list.length} ${list.length === 1 ? 'product' : 'products'}, bought directly and formula-checked. Prices in MVR, free same-day delivery in Malé.`;
+---
+
+<Base
+  title={title}
+  description={desc.length > 155 ? desc.slice(0, 152) + '…' : desc}
+  ogImage={`/og/brand-${b.slug}.png`}
+  jsonld={[itemListLd(`${b.name} at VERUM`, list.map((p) => ({ url: productUrl(p), name: `${b.name} ${p.name}` }))), breadcrumbLd(crumbs)]}
+>
+  <div class="wrap page-head">
+    <Breadcrumbs items={crumbs} />
+    <p class="eyebrow">{b.origin} · {b.country}{b.founded ? ` · since ${b.founded}` : ''}</p>
+    <h1>{b.name}</h1>
+    <p class="lede brand-blurb">{b.blurb}</p>
+    <p class="label brand-src">
+      Bought directly from {b.name} or its authorised distributor. Product facts from <a href={b.website} rel="noopener nofollow" target="_blank">{host}</a>.
+    </p>
+  </div>
+  <div class="wrap">
+    <TrustStrip compact />
+  </div>
+  <section class="section" aria-labelledby="bp-h">
+    <div class="wrap">
+      <div class="section-head">
+        <h2 id="bp-h">{list.length} {b.name} {list.length === 1 ? 'product' : 'products'}</h2>
+        <a class="link-arrow" href={`/shop?brand=${b.slug}`}>Filter in the shop</a>
+      </div>
+      <ProductGrid products={list} heading="h3" eagerFirst={2} />
+    </div>
+  </section>
+</Base>
+
+<style>
+  .brand-blurb {
+    max-width: 60ch;
+    color: var(--ink);
+  }
+  .brand-src {
+    margin-top: 12px;
+  }
+  .brand-src a {
+    color: var(--ink);
+  }
+</style>

@@ -1,0 +1,109 @@
+---
+import { getImage } from 'astro:assets';
+import Base from '../../layouts/Base.astro';
+import IngredientExplorer, { type ExplorerProduct } from '../../islands/IngredientExplorer';
+import { products, ingredients, brandName, productImage, productUrl, productsWithIngredient } from '../../lib/catalog';
+import { goals } from '../../data/taxonomy';
+import { itemListLd, breadcrumbLd } from '../../lib/seo';
+
+const list: ExplorerProduct[] = await Promise.all(
+  products.map(async (p) => {
+    const src = productImage(p.images[0]);
+    const [t1, t2] = await Promise.all([96, 192].map((w) => getImage({ src, width: w, height: w, format: 'webp', quality: 72 })));
+    const ings: Record<string, string | null> = {};
+    for (const k of p.keyIngredients) if (k.ingredient && !(k.ingredient in ings && ings[k.ingredient])) ings[k.ingredient] = k.concentration;
+    return { id: p.code, slug: p.slug, short: p.short, brand: brandName(p), price: p.price, size: p.size, url: productUrl(p), t1: t1.src, t2: t2.src, ings };
+  }),
+);
+const sorted = [...ingredients].sort((a, b) => a.name.localeCompare(b.name));
+---
+
+<Base
+  title="Ingredient explorer · What each one does · VERUM"
+  description="What niacinamide, retinol, vitamin C, BHA and 16 more ingredients do, who they suit, when to use them, what not to layer, and where to find them."
+  ogImage="/og/ingredients.png"
+  jsonld={[
+    itemListLd('Skincare ingredients', sorted.map((i) => ({ url: `/ingredients/${i.slug}`, name: i.name }))),
+    breadcrumbLd([
+      { name: 'Home', url: '/' },
+      { name: 'Ingredients', url: '/ingredients' },
+    ]),
+  ]}
+>
+  <div class="wrap page-head">
+    <p class="eyebrow">Ingredient explorer · {ingredients.length} ingredients</p>
+    <h1>What each ingredient actually does.</h1>
+    <p class="lede">Filter by what you want, then open an ingredient for plain-English answers and every product we stock that contains it.</p>
+  </div>
+  <div class="wrap ix-wrap">
+    <IngredientExplorer client:idle ingredients={ingredients} products={list} />
+  </div>
+
+  <section class="section" aria-labelledby="az-h">
+    <div class="wrap">
+      <h2 id="az-h" class="az-h">Ingredient guides, A to Z</h2>
+      <ul role="list" class="az">
+        {
+          sorted.map((i) => (
+            <li>
+              <a href={`/ingredients/${i.slug}`}>
+                <span class="az-name">{i.name}</span>
+                <span class="az-meta mono">
+                  {i.goals.map((g) => goals.find((x) => x.id === g)?.label).join(' · ')} · {productsWithIngredient(i.slug).length} products
+                </span>
+                <span class="az-answer">{i.answer}</span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .ix-wrap {
+    padding-bottom: var(--section-y);
+  }
+  .az-h {
+    font-size: var(--fs-h3);
+    margin-bottom: 16px;
+  }
+  .az {
+    display: grid;
+    border-top: 1px solid var(--hairline);
+    border-left: 1px solid var(--hairline);
+  }
+  .az a {
+    display: grid;
+    gap: 4px;
+    padding: 14px;
+    background: var(--paper);
+    text-decoration: none;
+    height: 100%;
+  }
+  .az a:hover {
+    background: var(--bone);
+  }
+  .az-name {
+    font-weight: 600;
+  }
+  .az-meta {
+    font-size: 11px;
+    color: var(--sage-deep);
+  }
+  .az-answer {
+    font-size: var(--fs-14);
+    color: var(--graphite);
+  }
+  @media (min-width: 700px) {
+    .az {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+  @media (min-width: 1100px) {
+    .az {
+      grid-template-columns: 1fr 1fr 1fr;
+    }
+  }
+</style>

@@ -1,0 +1,125 @@
+---
+import type { GetStaticPaths } from 'astro';
+import Base from '../../layouts/Base.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import ProductGrid from '../../components/ProductGrid.astro';
+import { ingredients, productsWithIngredient, productUrl, brandName } from '../../lib/catalog';
+import { goals } from '../../data/taxonomy';
+import { itemListLd, breadcrumbLd } from '../../lib/seo';
+import type { Ingredient } from '../../data/types';
+
+export const getStaticPaths = (() => ingredients.map((i) => ({ params: { slug: i.slug }, props: { ing: i } }))) satisfies GetStaticPaths;
+const { ing } = Astro.props as { ing: Ingredient };
+const list = productsWithIngredient(ing.slug).sort((a, b) => a.salesRank - b.salesRank);
+const nameOf = (s: string) => ingredients.find((i) => i.slug === s)?.name ?? s;
+const crumbs = [
+  { name: 'Home', url: '/' },
+  { name: 'Ingredients', url: '/ingredients' },
+  { name: ing.name, url: `/ingredients/${ing.slug}` },
+];
+const verdict = { split: 'Best split AM and PM, or on different nights', avoid: 'Not recommended in the same routine' } as const;
+const title = `What does ${ing.name.toLowerCase()} do? · VERUM`;
+const desc = ing.answer.length > 152 ? ing.answer.slice(0, 150).replace(/\s+\S*$/, '') + '…' : ing.answer;
+---
+
+<Base
+  title={title.length <= 60 ? title : `${ing.name}: what it does · VERUM`}
+  description={desc}
+  ogImage={`/og/ingredient-${ing.slug}.png`}
+  ogType="article"
+  jsonld={[itemListLd(`Products with ${ing.name}`, list.map((p) => ({ url: productUrl(p), name: `${brandName(p)} ${p.name}` }))), breadcrumbLd(crumbs)]}
+>
+  <div class="wrap page-head">
+    <Breadcrumbs items={crumbs} />
+    <p class="eyebrow">{ing.kind} · {ing.time} · {ing.goals.map((g) => goals.find((x) => x.id === g)?.label).join(', ')}</p>
+    <h1>{ing.name}</h1>
+    <p class="lede ing-answer">{ing.answer}</p>
+    <div class="page-head-actions">
+      <a class="btn" href={`#products`}>See the {list.length} {list.length === 1 ? 'product' : 'products'}</a>
+      <a class="btn btn--quiet" href={`/ingredients?i=${ing.slug}`}>Open in the explorer</a>
+    </div>
+  </div>
+
+  <section class="section" aria-labelledby="ing-facts">
+    <div class="wrap">
+      <h2 id="ing-facts" class="sr-only">{ing.name} at a glance</h2>
+      <dl class="ing-dl">
+        <div><dt class="mono">What it does</dt><dd>{ing.whatItDoes}</dd></div>
+        <div><dt class="mono">Who it suits</dt><dd>{ing.suits}</dd></div>
+        <div><dt class="mono">Who should be careful</dt><dd>{ing.careful}</dd></div>
+        <div><dt class="mono">AM or PM</dt><dd>{ing.timeNote}</dd></div>
+        <div>
+          <dt class="mono">Don’t layer with</dt>
+          <dd>
+            {
+              ing.pairs.length ? (
+                <ul role="list" class="ing-pairs">
+                  {ing.pairs.map((p) => (
+                    <li>
+                      <a href={`/ingredients/${p.with}`}>{nameOf(p.with)}</a>: {verdict[p.verdict]}. {p.note}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                'No common conflicts. It layers well with most routines.'
+              )
+            }
+          </dd>
+        </div>
+      </dl>
+    </div>
+  </section>
+
+  <section class="section section--bone" id="products" aria-labelledby="ing-prod">
+    <div class="wrap">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">Generated from our product data</p>
+          <h2 id="ing-prod">Products with {ing.name.toLowerCase()}</h2>
+        </div>
+        <a class="link-arrow" href={`/shop?ing=${ing.slug}`}>Filter the shop</a>
+      </div>
+      <ProductGrid products={list} heading="h3" />
+    </div>
+  </section>
+</Base>
+
+<style>
+  .ing-answer {
+    font-size: var(--fs-20);
+    color: var(--ink);
+    max-width: 52ch;
+  }
+  .ing-dl {
+    margin: 0;
+    display: grid;
+    border-top: 1px solid var(--ink);
+  }
+  .ing-dl > div {
+    display: grid;
+    gap: 6px;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--hairline);
+  }
+  .ing-dl dt {
+    font-size: var(--fs-12);
+    color: var(--graphite);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .ing-dl dd {
+    margin: 0;
+    max-width: 68ch;
+    font-size: var(--fs-16);
+  }
+  .ing-pairs {
+    display: grid;
+    gap: 8px;
+  }
+  @media (min-width: 800px) {
+    .ing-dl > div {
+      grid-template-columns: 220px minmax(0, 1fr);
+      gap: 24px;
+    }
+  }
+</style>

@@ -1,0 +1,65 @@
+---
+import type { Product } from '../data/types';
+import ProductCard from './ProductCard.astro';
+
+interface Props {
+  products: Product[];
+  heading?: 'h2' | 'h3' | 'h4';
+  eagerFirst?: number;
+  /** Horizontal scroll row on mobile instead of a 2-column grid. */
+  row?: boolean;
+  id?: string;
+  label?: string;
+}
+const { products, heading = 'h3', eagerFirst = 0, row = false, id, label } = Astro.props;
+---
+
+<ul role="list" class:list={['pgrid', { 'pgrid--row': row }]} id={id} aria-label={label}>
+  {
+    products.map((p, i) => (
+      <li class="pgrid-item">
+        <ProductCard product={p} heading={heading} eager={i < eagerFirst} priority={i < Math.min(2, eagerFirst)} />
+      </li>
+    ))
+  }
+</ul>
+
+<style>
+  .pgrid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    border-top: 1px solid var(--hairline);
+    border-left: 1px solid var(--hairline);
+  }
+  .pgrid-item {
+    display: flex;
+    background: var(--paper);
+    min-width: 0;
+  }
+  .pgrid-item > :global(*) {
+    flex: 1;
+  }
+  @media (min-width: 640px) {
+    .pgrid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+  @media (min-width: 1024px) {
+    .pgrid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+  @media (max-width: 639px) {
+    .pgrid--row {
+      display: flex;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      overscroll-behavior-x: contain;
+      scrollbar-width: thin;
+    }
+    .pgrid--row .pgrid-item {
+      flex: 0 0 62%;
+      scroll-snap-align: start;
+    }
+  }
+</style>

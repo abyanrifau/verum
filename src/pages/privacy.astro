@@ -1,0 +1,36 @@
+---
+import Base from '../layouts/Base.astro';
+import { site } from '../data/site';
+import { breadcrumbLd } from '../lib/seo';
+---
+
+<Base
+  title="Privacy · nothing is stored or sent · VERUM"
+  description="VERUM is a Nuit Works concept. No data is stored on a server or sent anywhere. Your cart, quiz and order stay in this browser only."
+  ogImage="/og/privacy.png"
+  jsonld={[breadcrumbLd([{ name: 'Home', url: '/' }, { name: 'Privacy', url: '/privacy' }])]}
+>
+  <div class="wrap page-head">
+    <p class="eyebrow">Privacy</p>
+    <h1>Nothing is stored or sent.</h1>
+    <p class="lede">{site.concept.line} No order is placed and no payment is taken.</p>
+    <div class="page-head-actions">
+      <a class="btn" href="/quiz">Find your routine in 30 seconds</a>
+      <a class="btn btn--quiet" href="/shop">Shop all products</a>
+    </div>
+  </div>
+  <section class="section">
+    <div class="wrap prose">
+      <h2>What happens to what you enter</h2>
+      <ul>
+        <li>Your cart, compare list, quiz answers, routine and last order are kept in this browser’s local storage so they survive a refresh. Clear your browser data to remove them.</li>
+        <li>Checkout details never leave your device. There is no server, no database and no payment processor behind this site.</li>
+        <li>A transfer slip you attach stays in the browser tab and is gone when you close it. It is never uploaded.</li>
+        <li>There are no cookies, analytics, trackers, chat widgets or third-party scripts.</li>
+        <li>The WhatsApp and email links open your own apps with a placeholder number and address. Nothing is sent unless you send it.</li>
+      </ul>
+      <h2>Contact</h2>
+      <p>Questions about this concept: <a class="link" href="https://nuit.works" rel="noopener">Nuit Works</a>.</p>
+    </div>
+  </section>
+</Base>

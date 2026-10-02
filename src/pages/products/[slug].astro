@@ -1,0 +1,758 @@
+---
+import type { GetStaticPaths } from 'astro';
+import { Picture, getImage } from 'astro:assets';
+import Base from '../../layouts/Base.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import TrustStrip from '../../components/TrustStrip.astro';
+import FormulaBreakdown from '../../components/FormulaBreakdown.astro';
+import ProductGrid from '../../components/ProductGrid.astro';
+import ProductCard from '../../components/ProductCard.astro';
+import Icon from '../../components/Icon.astro';
+import { products, productBySlug, productImages, brandBySlug, productUrl, reviewsFor, rating, stockSignal, describe } from '../../lib/catalog';
+import { ingredientBySlug } from '../../data/ingredients';
+import { categoryLabel, stepLabel, skinLabel, concernLabel } from '../../data/taxonomy';
+import { whatsappLink } from '../../data/site';
+import { productLd, breadcrumbLd } from '../../lib/seo';
+import { bundle, tiers } from '../../lib/bundle';
+import { mvr, pricePerUnit } from '../../lib/money';
+import type { Product } from '../../data/types';
+
+export const getStaticPaths = (() => products.map((p) => ({ params: { slug: p.slug }, props: { p } }))) satisfies GetStaticPaths;
+
+const { p } = Astro.props as { p: Product };
+const brand = brandBySlug.get(p.brand)!;
+const bName = brand.name;
+const url = productUrl(p);
+const imgs = productImages(p);
+const stock = stockSignal(p);
+const revs = reviewsFor(p);
+const rate = rating(p);
+const pairs = p.pairsWith.map((s) => productBySlug.get(s)!).filter(Boolean);
+const setIds = [p.code, ...pairs.map((x) => x.code)];
+const setCalc = bundle([p, ...pairs].map((x) => ({ id: x.code, qty: 1, price: x.price })));
+const related = products
+  .filter((x) => x.slug !== p.slug && !p.pairsWith.includes(x.slug) && (x.step === p.step || x.concerns.some((c) => p.concerns.includes(c))))
+  .sort((a, b) => Number(b.step === p.step) - Number(a.step === p.step) || a.salesRank - b.salesRank)
+  .slice(0, 4);
+const keyIngs = [...new Map(p.keyIngredients.filter((k) => k.ingredient).map((k) => [k.ingredient!, ingredientBySlug.get(k.ingredient!)!])).values()];
+
+const sizes = '(min-width: 1100px) 560px, (min-width: 900px) 48vw, 100vw';
+const heroAvif = await Promise.all([360, 560, 760, 1000].map((w) => getImage({ src: imgs[0], width: w, format: 'avif' })));
+const og = await getImage({ src: imgs[0], width: 1200, height: 1200, format: 'jpg', quality: 82 });
+const timeLabel = p.time === 'AM+PM' ? 'AM and PM' : `${p.time} only`;
+const fullTitle = `${bName} ${p.short} · VERUM`;
+const pageTitle = fullTitle.length <= 60 ? fullTitle : `${p.short} · VERUM`.length <= 60 ? `${p.short} · VERUM` : `${p.short.slice(0, 50)} · VERUM`;
+const desc = `${bName} ${p.name}, ${p.size}. ${p.note}`.slice(0, 152).replace(/\s+\S*$/, '') + '…';
+const firstTier = tiers[0];
+---
+
+<Base
+  title={pageTitle}
+  description={desc}
+  ogImage={og.src}
+  ogImageAlt={p.imageAlt}
+  ogType="product"
+  preloadImage={{ href: heroAvif[1].src, srcset: heroAvif.map((i) => `${i.src} ${i.attributes.width}w`).join(', '), sizes, type: 'image/avif' }}
+  jsonld={[
+    productLd({
+      name: `${bName} ${p.name}`,
+      brand: bName,
+      code: p.code,
+      url,
+      image: [og.src],
+      description: describe(p),
+      price: p.price,
+      stock: p.stock,
+      category: categoryLabel(p.category),
+      size: p.size,
+    }),
+    breadcrumbLd([
+      { name: 'Home', url: '/' },
+      { name: 'Shop', url: '/shop' },
+      { name: categoryLabel(p.category), url: `/shop?category=${p.category}` },
+      { name: p.short, url },
+    ]),
+  ]}
+>
+  <div class="wrap pd-crumbs">
+    <Breadcrumbs
+      items={[
+        { name: 'Home', url: '/' },
+        { name: 'Shop', url: '/shop' },
+        { name: categoryLabel(p.category), url: `/shop?category=${p.category}` },
+        { name: p.short, url },
+      ]}
+    />
+  </div>
+
+  <div class="wrap pd">
+    <div class="pd-gallery">
+      <div class="pd-track" id="pd-track" tabindex="-1">
+        {
+          imgs.map((img, i) => (
+            <figure class="pd-slide tile" id={`pd-slide-${i}`}>
+              <Picture
+                src={img}
+                formats={['avif', 'webp']}
+                fallbackFormat="webp"
+                widths={[360, 560, 760, 1000]}
+                sizes={sizes}
+                alt={i === 0 ? p.imageAlt : `${p.imageAlt}, view ${i + 1}`}
+                loading={i === 0 ? 'eager' : 'lazy'}
+                fetchpriority={i === 0 ? 'high' : 'auto'}
+                decoding={i === 0 ? 'sync' : 'async'}
+                style={i === 0 ? 'view-transition-name: product-hero' : undefined}
+                data-vt-hero={i === 0 ? '' : undefined}
+              />
+            </figure>
+          ))
+        }
+      </div>
+      <span class="pd-code mono">{p.code}</span>
+      {
+        imgs.length > 1 && (
+          <div class="pd-thumbs" role="group" aria-label="Product images">
+            {imgs.map((img, i) => (
+              <button type="button" class="pd-thumb" data-slide={i} aria-label={`Show image ${i + 1} of ${imgs.length}`} aria-pressed={i === 0 ? 'true' : 'false'}>
+                <Picture src={img} formats={['avif', 'webp']} fallbackFormat="webp" widths={[80, 160]} sizes="64px" alt="" loading="lazy" />
+              </button>
+            ))}
+          </div>
+        )
+      }
+    </div>
+
+    <div class="pd-buy">
+      <p class="mono pd-lab">{p.code} · {stepLabel(p.step)} · {timeLabel}</p>
+      <p class="pd-brand"><a href={`/brands/${brand.slug}`}>{bName}</a></p>
+      <h1 class="pd-title">{p.name}</h1>
+      <p class="mono pd-size">{p.size} · {pricePerUnit(p.price, p.sizeValue, p.sizeUnit)}</p>
+      <div class="pd-price-row">
+        <p class="pd-price mono">{mvr(p.price)}</p>
+        <p class:list={['pd-stock', stock.tone]}>
+          {stock.tone === 'ok' ? 'In stock · free same-day delivery in Malé' : stock.text}
+          {p.flags.includes('restocked') && <span class="pd-flag mono">Restocked</span>}
+          {p.flags.includes('new') && <span class="pd-flag mono">New</span>}
+        </p>
+      </div>
+      <div class="pd-actions" id="buy-actions">
+        <button type="button" class="btn btn--xl btn--block" data-add={p.code} disabled={p.stock <= 0} aria-label={`Add to cart: ${bName} ${p.short}, ${mvr(p.price)}`}>
+          <span data-label="Add to cart">Add to cart</span>
+        </button>
+        <a href={`/checkout?buy=${p.code.toLowerCase()}`} class="btn btn--lg btn--block btn--ghost">Buy now</a>
+        <div class="pd-sub">
+          <button type="button" class="pd-compare" data-compare={p.code} data-name={p.short} aria-pressed="false">
+            <span class="box" aria-hidden="true"></span> Add to compare
+          </button>
+          <a class="pd-cmp-go link" href="/compare" data-compare-go hidden>Compare now</a>
+          <a class="wa-link" href={whatsappLink(`Hi VERUM, a question about ${p.code} ${bName} ${p.short}.`)} target="_blank" rel="noopener">
+            <Icon name="chat" size={16} /> Ask on WhatsApp
+          </a>
+        </div>
+      </div>
+      <p class="pd-bundle label">
+        Bundle saving: add {firstTier.minSteps - 1} more different products and {firstTier.percent}% comes off the whole order. 5 or more: 15%.
+      </p>
+      <dl class="pd-facts">
+        <div><dt>Suits</dt><dd>{p.skinTypes.length >= 5 ? 'All skin types' : p.skinTypes.map(skinLabel).join(', ')}</dd></div>
+        <div><dt>Targets</dt><dd>{p.concerns.map(concernLabel).join(', ')}</dd></div>
+        <div><dt>Texture</dt><dd>{p.texture}</dd></div>
+        <div><dt>Fragrance</dt><dd>{p.fragranceFree ? 'Fragrance free' : 'Contains fragrance'}{p.fragranceNote && <span class="muted"> · {p.fragranceNote}</span>}</dd></div>
+      </dl>
+    </div>
+  </div>
+
+  <div class="wrap pd-trust">
+    <TrustStrip compact />
+  </div>
+
+  <section class="section" aria-labelledby="pd-why">
+    <div class="wrap pd-two">
+      <div class="pd-note reveal">
+        <p class="eyebrow">Why we stock it</p>
+        <h2 id="pd-why" class="pd-note-h">VERUM note</h2>
+        <p class="pd-note-text">{p.note}</p>
+        {
+          keyIngs.length > 0 && (
+            <>
+              <p class="label pd-chips-label">Key ingredients, tap for the explorer</p>
+              <ul role="list" class="chip-row">
+                {keyIngs.map((i) => (
+                  <li>
+                    <a class="chip" href={`/ingredients?i=${i.slug}`}>{i.name}</a>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )
+        }
+      </div>
+      <FormulaBreakdown product={p} heading="h2" />
+    </div>
+  </section>
+
+  <section class="section section--bone" aria-labelledby="pd-use">
+    <div class="wrap">
+      <h2 id="pd-use" class="sr-only">Who it suits and how to use it</h2>
+      <dl class="pd-spec">
+        <div>
+          <dt class="mono">Who it suits</dt>
+          <dd>{p.skinTypes.length >= 5 ? 'All skin types' : `${p.skinTypes.map(skinLabel).join(', ')} skin`}. Best for {p.concerns.map(concernLabel).map((c) => c.toLowerCase()).join(', ')}.</dd>
+        </div>
+        <div>
+          <dt class="mono">How to use</dt>
+          <dd>{p.howToUse}{p.frequency && <span class="pd-freq"> {p.frequency}.</span>}</dd>
+        </div>
+        <div>
+          <dt class="mono">AM or PM</dt>
+          <dd>{timeLabel}. Routine step {stepLabel(p.step).toLowerCase()}{p.step === 'protect' ? ', always last in the morning' : ''}.</dd>
+        </div>
+      </dl>
+    </div>
+  </section>
+
+  {
+    pairs.length > 0 && (
+      <section class="section" aria-labelledby="pd-pairs">
+        <div class="wrap">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Pairs well with</p>
+              <h2 id="pd-pairs">Complete the set</h2>
+            </div>
+          </div>
+          <ul role="list" class="pgrid pd-pairs-grid">
+            {pairs.map((x) => (
+              <li class="pd-pair">
+                <ProductCard product={x} heading="h3" sizes="(min-width: 1024px) 23vw, (min-width: 640px) 31vw, 47vw" />
+              </li>
+            ))}
+            <li class:list={['pd-setcard', pairs.length === 3 ? 'pd-setcard--1' : 'pd-setcard--2']}>
+              <p class="eyebrow">The set</p>
+              <ol role="list" class="pd-setlist">
+                {[p, ...pairs].map((x, i) => (
+                  <li>
+                    <span class="mono">{String(i + 1).padStart(2, '0')}</span>
+                    <span>{x.short}</span>
+                    <span class="mono">{mvr(x.price)}</span>
+                  </li>
+                ))}
+              </ol>
+              <dl class="pd-setmath">
+                <div>
+                  <dt>Separately</dt>
+                  <dd class="mono"><s>{mvr(setCalc.subtotal)}</s></dd>
+                </div>
+                <div class="is-saving">
+                  <dt>Bundle, {setCalc.percent}% off</dt>
+                  <dd class="mono">−{mvr(setCalc.discount)}</dd>
+                </div>
+                <div class="pd-settotal">
+                  <dt>Set total</dt>
+                  <dd class="mono">{mvr(setCalc.total)}</dd>
+                </div>
+              </dl>
+              <button type="button" class="btn btn--lg btn--block" data-add-set={setIds.join(',')} aria-label={`Add the set to cart: ${setIds.length} products, ${mvr(setCalc.total)}`}>
+                <span data-label="Add the set">Add the set</span>
+              </button>
+            </li>
+          </ul>
+        </div>
+      </section>
+    )
+  }
+
+  <section class="section section--bone" aria-labelledby="pd-rev">
+    <div class="wrap pd-reviews">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">Reviews</p>
+          <h2 id="pd-rev">{rate.avg ? `${rate.avg.toFixed(1)} out of 5` : 'No reviews yet'}</h2>
+        </div>
+        <p class="label sample-note">Sample reviews written for this concept.</p>
+      </div>
+      {
+        revs.length ? (
+          <ul role="list" class="pd-rev-list">
+            {revs.map((r) => (
+              <li class="pd-rev">
+                <p class="review-stars" aria-label={`${r.rating} out of 5`}>
+                  {'★'.repeat(r.rating)}
+                  {'☆'.repeat(5 - r.rating)}
+                </p>
+                <p class="pd-rev-text">{r.text}</p>
+                <p class="label">
+                  {r.name} · {skinLabel(r.skinType)} skin · {r.month}
+                </p>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p class="muted">This is a new arrival. Reviews appear here once shoppers have used it for a few weeks.</p>
+        )
+      }
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="pd-rel">
+    <div class="wrap">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">Same step or concern</p>
+          <h2 id="pd-rel">Related products</h2>
+        </div>
+        <a class="link-arrow" href={`/shop?step=${p.step}`}>All {stepLabel(p.step).toLowerCase()} products</a>
+      </div>
+      <ProductGrid products={related} heading="h3" row />
+    </div>
+  </section>
+
+  <div class="sticky-atc" id="sticky-atc" aria-hidden="true" hidden>
+    <div class="sticky-atc-inner">
+      <div class="sticky-atc-text">
+        <p class="sticky-atc-name">{p.short}</p>
+        <p class="mono sticky-atc-price">{mvr(p.price)}</p>
+      </div>
+      <button type="button" class="btn btn--lg" data-add={p.code} disabled={p.stock <= 0} tabindex="-1">
+        <span data-label="Add to cart">Add to cart</span>
+      </button>
+    </div>
+  </div>
+</Base>
+
+<script>
+  function initProduct() {
+    const track = document.getElementById('pd-track');
+    const thumbs = [...document.querySelectorAll<HTMLButtonElement>('.pd-thumb')];
+    thumbs.forEach((b) =>
+      b.addEventListener('click', () => {
+        const i = Number(b.dataset.slide);
+        const slide = document.getElementById(`pd-slide-${i}`);
+        if (track && slide) track.scrollTo({ left: slide.offsetLeft - track.offsetLeft, behavior: 'smooth' });
+        thumbs.forEach((t) => t.setAttribute('aria-pressed', String(t === b)));
+      }),
+    );
+    // Sticky add-to-cart on mobile: shows once the main button scrolls away.
+    const bar = document.getElementById('sticky-atc');
+    const actions = document.getElementById('buy-actions');
+    if (!bar || !actions || !('IntersectionObserver' in window)) return;
+    const mq = window.matchMedia('(max-width: 899px)');
+    const io = new IntersectionObserver(([en]) => {
+      const show = mq.matches && !en.isIntersecting && en.boundingClientRect.top < 0;
+      bar.hidden = !show;
+      bar.setAttribute('aria-hidden', String(!show));
+      bar.querySelector('button')!.tabIndex = show ? 0 : -1;
+      document.documentElement.style.setProperty('--bottom-ui', show ? `${bar.offsetHeight}px` : '0px');
+    });
+    io.observe(actions);
+    document.addEventListener('astro:before-swap', () => {
+      io.disconnect();
+      document.documentElement.style.setProperty('--bottom-ui', '0px');
+    }, { once: true });
+  }
+  document.addEventListener('astro:page-load', () => {
+    if (document.getElementById('pd-track')) initProduct();
+  });
+</script>
+
+<style>
+  .pd-crumbs {
+    padding-top: 12px;
+  }
+  .pd {
+    display: grid;
+    gap: 20px;
+    padding-top: 8px;
+    padding-bottom: 28px;
+  }
+  .pd-gallery {
+    position: relative;
+    min-width: 0;
+  }
+  .pd-track {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    border: 1px solid var(--hairline);
+  }
+  .pd-track::-webkit-scrollbar {
+    display: none;
+  }
+  .pd-slide {
+    flex: 0 0 100%;
+    margin: 0;
+    scroll-snap-align: start;
+  }
+  .pd-code {
+    position: absolute;
+    left: 12px;
+    top: 10px;
+    font-size: var(--fs-12);
+    color: var(--graphite);
+  }
+  .pd-thumbs {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+  }
+  .pd-thumb {
+    width: 64px;
+    height: 64px;
+    padding: 0;
+    border: 1px solid var(--hairline);
+    background: var(--bone);
+  }
+  .pd-thumb[aria-pressed='true'] {
+    border-color: var(--ink);
+  }
+  .pd-thumb :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+  .pd-buy {
+    display: grid;
+    gap: 8px;
+    align-content: start;
+    min-width: 0;
+  }
+  .pd-lab {
+    font-size: var(--fs-12);
+    color: var(--graphite);
+  }
+  .pd-brand a {
+    color: var(--graphite);
+    text-decoration: none;
+    font-weight: 500;
+  }
+  .pd-brand a:hover {
+    color: var(--ink);
+    text-decoration: underline;
+  }
+  .pd-title {
+    font-size: clamp(1.75rem, 1.3rem + 2vw, 2.75rem);
+    letter-spacing: -0.035em;
+    line-height: 1.04;
+  }
+  .pd-size {
+    font-size: var(--fs-13);
+    color: var(--graphite);
+  }
+  .pd-price-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 6px 16px;
+    padding: 10px 0;
+    border-top: 1px solid var(--hairline);
+    border-bottom: 1px solid var(--hairline);
+  }
+  .pd-price {
+    font-size: var(--fs-24);
+    font-weight: 600;
+  }
+  .pd-stock {
+    font-size: var(--fs-14);
+    color: var(--graphite);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .pd-stock.low {
+    color: var(--ink);
+    font-weight: 550;
+  }
+  .pd-flag {
+    font-size: 11px;
+    padding: 1px 6px;
+    border: 1px solid var(--sage-deep);
+    color: var(--sage-deep);
+  }
+  .pd-actions {
+    display: grid;
+    gap: 8px;
+    margin-top: 4px;
+  }
+  .pd-actions .btn--xl:global(.is-added) {
+    --btn-bg: var(--sage-deep);
+    --btn-bd: var(--sage-deep);
+  }
+  .pd-sub {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .pd-compare {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: var(--tap);
+    padding: 0;
+    border: 0;
+    background: none;
+    font-size: var(--fs-14);
+    color: var(--ink);
+  }
+  .box {
+    width: 16px;
+    height: 16px;
+    border: 1px solid var(--line-strong);
+    border-radius: 2px;
+    display: inline-grid;
+    place-items: center;
+  }
+  .pd-cmp-go {
+    font-size: var(--fs-14);
+    min-height: var(--tap);
+    display: inline-flex;
+    align-items: center;
+  }
+  @media (min-width: 900px) {
+    .pd-cmp-go {
+      display: none !important;
+    }
+  }
+  .pd-compare[aria-pressed='true'] .box {
+    background: var(--sage-deep);
+    border-color: var(--sage-deep);
+  }
+  .pd-compare[aria-pressed='true'] .box::after {
+    content: '';
+    width: 8px;
+    height: 4px;
+    border-left: 1.5px solid #fff;
+    border-bottom: 1.5px solid #fff;
+    transform: rotate(-45deg) translate(1px, -1px);
+  }
+  .pd-bundle {
+    padding: 8px 10px;
+    background: var(--sage-tint);
+    color: var(--ink);
+  }
+  .pd-facts {
+    margin: 4px 0 0;
+    border-top: 1px solid var(--hairline);
+  }
+  .pd-facts div {
+    display: grid;
+    grid-template-columns: 92px minmax(0, 1fr);
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--hairline);
+    font-size: var(--fs-14);
+  }
+  .pd-facts dt {
+    font-family: var(--font-mono-stack);
+    font-size: var(--fs-12);
+    color: var(--graphite);
+    padding-top: 2px;
+  }
+  .pd-facts dd {
+    margin: 0;
+  }
+  .pd-trust {
+    padding-bottom: 8px;
+  }
+  .pd-two {
+    display: grid;
+    gap: 24px;
+    align-items: start;
+  }
+  .pd-note {
+    display: grid;
+    gap: 10px;
+  }
+  .pd-note-h {
+    font-size: var(--fs-h3);
+  }
+  .pd-note-text {
+    font-size: var(--fs-20);
+    line-height: 1.4;
+    letter-spacing: -0.015em;
+    max-width: 40ch;
+  }
+  .pd-chips-label {
+    margin-top: 8px;
+  }
+  .pd-spec {
+    margin: 0;
+    display: grid;
+    border-top: 1px solid var(--hairline);
+    border-left: 1px solid var(--hairline);
+  }
+  .pd-spec > div {
+    background: var(--paper);
+    padding: 16px;
+    display: grid;
+    gap: 8px;
+    align-content: start;
+  }
+  .pd-spec dt {
+    font-size: var(--fs-12);
+    color: var(--graphite);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .pd-spec dd {
+    margin: 0;
+  }
+  .pd-freq {
+    font-weight: 600;
+  }
+  .pd-pairs-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    border-top: 1px solid var(--hairline);
+    border-left: 1px solid var(--hairline);
+  }
+  .pd-pair {
+    display: flex;
+    background: var(--paper);
+    min-width: 0;
+  }
+  .pd-pair > :global(*) {
+    flex: 1;
+  }
+  .pd-setcard {
+    display: grid;
+    gap: 12px;
+    align-content: start;
+    padding: 16px;
+    background: var(--sage-tint);
+  }
+  .pd-setcard--2 {
+    grid-column: 1 / -1;
+  }
+  .pd-setlist li {
+    display: grid;
+    grid-template-columns: 28px minmax(0, 1fr) auto;
+    gap: 8px;
+    padding: 6px 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--sage) 40%, transparent);
+    font-size: var(--fs-14);
+  }
+  .pd-setlist .mono {
+    font-size: var(--fs-12);
+  }
+  .pd-setmath {
+    margin: 0;
+    display: grid;
+    gap: 4px;
+    font-size: var(--fs-14);
+  }
+  .pd-setmath div {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .pd-setmath dd {
+    margin: 0;
+  }
+  .pd-setmath s {
+    color: var(--graphite);
+  }
+  .pd-setmath .is-saving {
+    color: var(--sage-deep);
+    font-weight: 600;
+  }
+  .pd-settotal {
+    padding-top: 6px;
+    border-top: 1px solid var(--ink);
+    font-size: var(--fs-18);
+    font-weight: 650;
+  }
+  @media (min-width: 1024px) {
+    .pd-pairs-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+    .pd-setcard--2 {
+      grid-column: span 2;
+    }
+  }
+  .pd-rev-list {
+    display: grid;
+    border-top: 1px solid var(--hairline);
+    border-left: 1px solid var(--hairline);
+  }
+  .pd-rev {
+    background: var(--paper);
+    padding: 16px;
+    display: grid;
+    gap: 6px;
+  }
+  .pd-rev-text {
+    font-size: var(--fs-16);
+  }
+  .review-stars {
+    letter-spacing: 2px;
+  }
+  .sticky-atc {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 35;
+    background: var(--paper);
+    border-top: 1px solid var(--ink);
+    padding: 8px var(--gutter) calc(8px + env(safe-area-inset-bottom, 0px));
+    animation: atc-in 220ms var(--ease);
+  }
+  @keyframes atc-in {
+    from {
+      transform: translateY(100%);
+    }
+  }
+  .sticky-atc-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .sticky-atc-text {
+    min-width: 0;
+  }
+  .sticky-atc-name {
+    font-weight: 600;
+    font-size: var(--fs-14);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .sticky-atc-price {
+    font-size: var(--fs-14);
+  }
+  @media (min-width: 700px) {
+    .pd-spec {
+      grid-template-columns: repeat(3, 1fr);
+    }
+    .pd-rev-list {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  @media (min-width: 900px) {
+    .pd {
+      grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+      gap: 40px;
+    }
+    .pd-buy {
+      position: sticky;
+      top: calc(var(--header-h) + 16px);
+    }
+    .pd-two {
+      grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+      gap: 48px;
+    }
+    .sticky-atc {
+      display: none !important;
+    }
+  }
+  @media (min-width: 1100px) {
+    .pd-rev-list {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+</style>

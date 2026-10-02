@@ -1,0 +1,184 @@
+---
+import { site, deliveryZones, whatsappLink } from '../data/site';
+import { categories } from '../data/taxonomy';
+import { brands } from '../data/brands';
+import Logo from './Logo.astro';
+
+const year = 2026;
+const topBrands = brands.slice(0, 10);
+---
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="ft-top">
+      <div class="ft-brand">
+        <a href="/" class="ft-logo" aria-label="VERUM, home"><Logo size={32} /><span aria-hidden="true">VERUM</span></a>
+        <p class="ft-tag">{site.tagline} {site.description}</p>
+        <a href="/quiz" class="btn btn--ghost">Find your routine in 30 seconds</a>
+      </div>
+
+      <nav class="ft-cols" aria-label="Footer">
+        <div>
+          <h2 class="ft-h">Shop</h2>
+          <ul role="list">
+            <li><a href="/shop">All products</a></li>
+            {categories.map((c) => <li><a href={`/shop?category=${c.id}`}>{c.label}</a></li>)}
+          </ul>
+        </div>
+        <div>
+          <h2 class="ft-h">Brands</h2>
+          <ul role="list">
+            {topBrands.map((b) => <li><a href={`/brands/${b.slug}`}>{b.name}</a></li>)}
+            <li><a href="/brands">All {brands.length} brands</a></li>
+          </ul>
+        </div>
+        <div>
+          <h2 class="ft-h">Pages</h2>
+          <ul role="list">
+            <li><a href="/quiz">Skin quiz</a></li>
+            <li><a href="/routine">Routine builder</a></li>
+            <li><a href="/ingredients">Ingredient explorer</a></li>
+            <li><a href="/compare">Compare</a></li>
+            <li><a href="/philosophy">Philosophy</a></li>
+            <li><a href="/contact#faq">FAQ</a></li>
+            <li><a href="/credits">Photo credits</a></li>
+            <li><a href="/privacy">Privacy</a></li>
+          </ul>
+        </div>
+        <div>
+          <h2 class="ft-h">Delivery and contact</h2>
+          <ul role="list" class="ft-delivery">
+            {
+              deliveryZones.map((z) => (
+                <li>
+                  <span>{z.short}</span>
+                  <span class="mono">{z.feeLabel}</span>
+                </li>
+              ))
+            }
+          </ul>
+          <ul role="list" class="ft-contact">
+            <li><a href={whatsappLink('Hi VERUM, I have a question.')} rel="noopener" target="_blank">WhatsApp {site.contact.whatsappDisplay}</a></li>
+            <li><a href={`mailto:${site.contact.email}`}>{site.contact.email}</a></li>
+            <li><a href={`mailto:${site.contact.tradeEmail}`}>{site.contact.tradeEmail}</a> <span class="muted">for brands</span></li>
+            <li><a href={site.contact.instagram} rel="noopener" target="_blank">Instagram {site.contact.instagramHandle}</a></li>
+            <li><a href="/contact">Pickup: {site.address.street}, {site.address.city}</a></li>
+          </ul>
+        </div>
+      </nav>
+    </div>
+
+    <div class="ft-concept">
+      <p>
+        A <a href="https://nuit.works" rel="noopener">Nuit Works</a> concept. VERUM is a fictional business.
+      </p>
+    </div>
+
+    <div class="ft-bottom">
+      <p>Brand names and product images belong to their respective owners.</p>
+      <p>Prices in MVR, including GST. © {year} VERUM concept.</p>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    border-top: 1px solid var(--hairline);
+    background: var(--bone);
+    padding-top: var(--space-7);
+    font-size: var(--fs-14);
+  }
+  .ft-top {
+    display: grid;
+    gap: var(--space-6);
+  }
+  .ft-logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    font-weight: 650;
+    letter-spacing: 0.22em;
+    text-decoration: none;
+    margin-bottom: var(--space-4);
+  }
+  .ft-tag {
+    max-width: 38ch;
+    color: var(--graphite);
+    margin-bottom: var(--space-4);
+  }
+  .ft-cols {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-6) var(--space-5);
+  }
+  .ft-h {
+    font-family: var(--font-mono-stack);
+    font-size: var(--fs-12);
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--graphite);
+    margin-bottom: var(--space-3);
+  }
+  .ft-cols li a {
+    display: inline-block;
+    padding: 5px 0;
+    text-decoration: none;
+  }
+  .ft-cols li a:hover {
+    text-decoration: underline;
+  }
+  .ft-delivery li {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 5px 0;
+    border-bottom: 1px solid var(--hairline);
+  }
+  .ft-delivery .mono {
+    font-size: var(--fs-12);
+    color: var(--graphite);
+  }
+  .ft-contact {
+    margin-top: var(--space-3);
+  }
+  .ft-concept {
+    margin-top: var(--space-7);
+    padding: var(--space-5) 0;
+    border-top: 1px solid var(--ink);
+    border-bottom: 1px solid var(--hairline);
+  }
+  .ft-concept p {
+    font-size: var(--fs-18);
+    font-weight: 550;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+  }
+  .ft-concept a {
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 4px;
+    text-decoration-color: var(--sage);
+  }
+  .ft-bottom {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 8px 24px;
+    padding: var(--space-4) 0 var(--space-6);
+    color: var(--graphite);
+  }
+  @media (min-width: 900px) {
+    .ft-top {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 2.4fr);
+    }
+    .ft-cols {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+  @media (max-width: 899px) {
+    .site-footer {
+      padding-bottom: var(--bottom-ui, 0px);
+    }
+  }
+</style>

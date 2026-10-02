@@ -1,0 +1,90 @@
+---
+import Base from '../layouts/Base.astro';
+import Checkout from '../islands/Checkout';
+import TrustStrip from '../components/TrustStrip.astro';
+import { site } from '../data/site';
+import { breadcrumbLd } from '../lib/seo';
+---
+
+<Base
+  title="Checkout · one page, no account · VERUM"
+  description="One-page checkout: contact, delivery or pickup in Malé, card or BML transfer. Bundle savings applied. A Nuit Works concept: no order is placed."
+  ogImage="/og/checkout.png"
+  hideQuizCta
+  jsonld={[
+    breadcrumbLd([
+      { name: 'Home', url: '/' },
+      { name: 'Cart', url: '/cart' },
+      { name: 'Checkout', url: '/checkout' },
+    ]),
+  ]}
+>
+  <div class="wrap co-head">
+    <h1>Checkout</h1>
+    <p class="co-demo-top">{site.concept.demoNote}</p>
+  </div>
+  <div class="wrap co-trust">
+    <TrustStrip compact />
+  </div>
+  <script is:inline>
+    // Before first paint: an empty cart shows the static message below instead of waiting for the island.
+    (function () {
+      var full = /[?&]buy=/.test(location.search);
+      try {
+        full = full || JSON.parse(localStorage.getItem('verum:cart') || '[]').length > 0;
+      } catch (e) {}
+      document.documentElement.dataset.cart = full ? 'full' : 'empty';
+    })();
+  </script>
+  <div class="wrap co-wrap">
+    <div class="co-empty co-empty-static">
+      <h2>Your cart is empty.</h2>
+      <p class="muted">Add a product, or let the quiz build a routine for you in three taps.</p>
+      <div class="co-empty-actions">
+        <a href="/quiz" class="btn btn--lg">Find your routine in 30 seconds</a>
+        <a href="/shop" class="btn btn--lg btn--quiet">Shop all products</a>
+      </div>
+    </div>
+    <Checkout client:load />
+  </div>
+</Base>
+
+<style>
+  .co-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 6px 20px;
+    padding-top: 16px;
+    padding-bottom: 10px;
+  }
+  .co-head h1 {
+    font-size: clamp(1.75rem, 1.4rem + 1.6vw, 2.5rem);
+  }
+  .co-demo-top {
+    font-size: var(--fs-13);
+    padding: 6px 10px;
+    border-left: 3px solid var(--ink);
+    background: var(--bone);
+  }
+  .co-trust {
+    margin-bottom: 16px;
+  }
+  .co-wrap {
+    padding-bottom: var(--section-y);
+    min-height: 60vh;
+  }
+  .co-empty-static {
+    display: none;
+  }
+  :global(html[data-cart='empty']) .co-empty-static {
+    display: grid;
+    gap: 12px;
+    padding: 24px 0;
+    max-width: 560px;
+  }
+  :global(html[data-cart='empty']) .co-wrap :global(astro-island) {
+    display: none;
+  }
+</style>

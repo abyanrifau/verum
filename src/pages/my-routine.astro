@@ -1,0 +1,35 @@
+---
+import Base from '../layouts/Base.astro';
+import RoutineSheet from '../islands/RoutineSheet';
+---
+
+<Base
+  title="Your routine, printable · VERUM"
+  description="Your AM and PM skincare routine with how to use each step. Print it or keep it on your phone."
+  ogImage="/og/my-routine.png"
+  noindex
+  preloadCatalog
+>
+  <div class="wrap page-head">
+    <p class="eyebrow">VERUM · Formula first.</p>
+    <h1>Your AM and PM routine</h1>
+  </div>
+  <div class="wrap mr-wrap">
+    <RoutineSheet client:load />
+  </div>
+</Base>
+
+<style>
+  .mr-wrap {
+    padding-bottom: var(--section-y);
+    min-height: 50vh;
+  }
+  @media print {
+    .page-head {
+      padding-top: 0;
+    }
+    .page-head h1 {
+      font-size: 28px;
+    }
+  }
+</style>

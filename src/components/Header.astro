@@ -1,0 +1,315 @@
+---
+import { nav, site, whatsappLink } from '../data/site';
+import Icon from './Icon.astro';
+import Logo from './Logo.astro';
+import CartButton from '../islands/CartButton';
+
+interface Props {
+  hideQuizCta?: boolean;
+}
+const { hideQuizCta = false } = Astro.props;
+const path = Astro.url.pathname.replace(/\.html$/, '').replace(/\/$/, '') || '/';
+const isActive = (href: string) => path === href || path.startsWith(href + '/') || (href === '/shop' && path.startsWith('/products'));
+---
+
+<header class="site-header">
+  <div class="wrap bar">
+    <a href="/" class="brand" aria-label="VERUM, home">
+      <Logo size={28} />
+      <span class="word" aria-hidden="true">VERUM</span>
+    </a>
+
+    <nav aria-label="Main" class="nav-desktop">
+      <ul role="list">
+        {
+          nav.map((n) => (
+            <li>
+              <a href={n.href} aria-current={isActive(n.href) ? 'page' : undefined} class:list={{ accent: n.href === '/quiz' }}>
+                {n.label}
+                {n.href === '/quiz' && <span class="tag mono">30s</span>}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+
+    <div class="actions">
+      {
+        !hideQuizCta && (
+          <a href="/quiz" class="btn btn--sm quiz-cta">
+            Skin quiz
+          </a>
+        )
+      }
+      <button
+        type="button"
+        class="icon-btn search-btn"
+        data-search-open
+        aria-label="Search products, brands and ingredients"
+        aria-keyshortcuts="/ Control+K Meta+K"
+      >
+        <Icon name="search" />
+        <span class="search-hint" aria-hidden="true">Search</span>
+        <kbd class="kbd mono" aria-hidden="true">/</kbd>
+      </button>
+      <CartButton client:load transition:persist="cart-button" />
+      <button type="button" class="icon-btn menu-btn" data-menu-open aria-label="Open menu" aria-haspopup="dialog" aria-controls="mobile-menu">
+        <Icon name="menu" />
+      </button>
+    </div>
+  </div>
+
+  <dialog id="mobile-menu" class="mobile-menu" aria-labelledby="mobile-menu-title">
+    <div class="mm-head">
+      <p id="mobile-menu-title" class="eyebrow">Menu</p>
+      <button type="button" class="icon-btn" data-menu-close aria-label="Close menu">
+        <Icon name="close" />
+      </button>
+    </div>
+    <nav aria-label="Main, mobile">
+      <ul role="list" class="mm-list">
+        {
+          nav.map((n, i) => (
+            <li>
+              <a href={n.href} aria-current={isActive(n.href) ? 'page' : undefined}>
+                <span class="mono mm-n">{String(i + 1).padStart(2, '0')}</span>
+                {n.label}
+              </a>
+            </li>
+          ))
+        }
+        <li><a href="/brands"><span class="mono mm-n">06</span>Brands</a></li>
+        <li><a href="/compare"><span class="mono mm-n">07</span>Compare</a></li>
+        <li><a href="/contact"><span class="mono mm-n">08</span>Delivery and contact</a></li>
+      </ul>
+    </nav>
+    <div class="mm-foot">
+      <a href="/quiz" class="btn btn--lg btn--block">Find your routine in 30 seconds</a>
+      <a class="wa-link" href={whatsappLink('Hi VERUM, I have a question.')} rel="noopener" target="_blank">
+        <Icon name="chat" size={18} /> Questions? WhatsApp {site.contact.whatsappDisplay}
+      </a>
+    </div>
+  </dialog>
+</header>
+
+<style>
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    background: color-mix(in srgb, var(--paper) 94%, transparent);
+    backdrop-filter: saturate(1.2) blur(10px);
+    border-bottom: 1px solid var(--hairline);
+  }
+  .bar {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    height: var(--header-h);
+  }
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-height: var(--tap);
+    text-decoration: none;
+    color: var(--ink);
+    flex-shrink: 0;
+  }
+  .word {
+    font-weight: 650;
+    font-size: 15px;
+    letter-spacing: 0.22em;
+  }
+  .nav-desktop {
+    display: none;
+    margin-left: var(--space-5);
+  }
+  .nav-desktop ul {
+    display: flex;
+    gap: 2px;
+  }
+  .nav-desktop a {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: var(--tap);
+    padding: 0 12px;
+    color: var(--graphite);
+    font-size: var(--fs-15);
+    font-weight: 500;
+    text-decoration: none;
+    transition: color var(--dur) var(--ease);
+  }
+  .nav-desktop a:hover,
+  .nav-desktop a[aria-current='page'] {
+    color: var(--ink);
+  }
+  .nav-desktop a[aria-current='page']::after {
+    content: '';
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    bottom: 6px;
+    height: 2px;
+    background: var(--sage-deep);
+  }
+  .nav-desktop a.accent {
+    color: var(--ink);
+  }
+  .tag {
+    font-size: 11px;
+    padding: 1px 5px;
+    border: 1px solid var(--sage);
+    color: var(--sage-deep);
+    border-radius: 2px;
+    line-height: 1.4;
+  }
+  .actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: auto;
+  }
+  .quiz-cta {
+    margin-right: 4px;
+    min-height: 38px;
+    padding-inline: 12px;
+  }
+  .icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-width: var(--tap);
+    height: var(--tap);
+    padding: 0 10px;
+    border: 0;
+    background: transparent;
+    color: var(--ink);
+    border-radius: var(--radius);
+  }
+  .icon-btn:hover {
+    background: var(--bone);
+  }
+  .search-hint,
+  .kbd {
+    display: none;
+  }
+  .kbd {
+    font-size: 11px;
+    border: 1px solid var(--hairline);
+    padding: 1px 6px;
+    border-radius: 3px;
+    color: var(--graphite);
+  }
+  @media (max-width: 380px) {
+    .bar {
+      gap: 8px;
+    }
+    .word {
+      letter-spacing: 0.16em;
+      font-size: 14px;
+    }
+    .icon-btn {
+      min-width: 40px;
+      padding: 0 8px;
+    }
+    .quiz-cta {
+      padding-inline: 10px;
+    }
+  }
+  @media (min-width: 1024px) {
+    .nav-desktop {
+      display: block;
+    }
+    .menu-btn,
+    .quiz-cta {
+      display: none;
+    }
+    .search-btn {
+      border: 1px solid var(--hairline);
+      height: 38px;
+      padding: 0 8px 0 12px;
+      margin-right: 6px;
+      color: var(--graphite);
+    }
+    .search-hint {
+      display: inline;
+      font-size: var(--fs-14);
+      margin-right: 18px;
+    }
+    .kbd {
+      display: inline;
+    }
+  }
+  @media (min-width: 1024px) and (max-width: 1180px) {
+    .search-hint {
+      display: none;
+    }
+    .nav-desktop {
+      margin-left: var(--space-3);
+    }
+    .nav-desktop a {
+      padding: 0 9px;
+    }
+  }
+
+  .mobile-menu {
+    margin: 0 0 0 auto;
+    width: min(420px, 100%);
+    max-width: 100%;
+    height: 100dvh;
+    max-height: 100dvh;
+    padding: 0;
+    border: 0;
+    border-left: 1px solid var(--hairline);
+    background: var(--paper);
+    display: none;
+    flex-direction: column;
+  }
+  .mobile-menu[open] {
+    display: flex;
+    animation: mm-in 260ms var(--ease);
+  }
+  @keyframes mm-in {
+    from {
+      transform: translateX(24px);
+      opacity: 0;
+    }
+  }
+  .mm-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: var(--header-h);
+    padding: 0 var(--gutter);
+    border-bottom: 1px solid var(--hairline);
+  }
+  .mm-list a {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    padding: 16px var(--gutter);
+    border-bottom: 1px solid var(--hairline);
+    font-size: var(--fs-20);
+    font-weight: 550;
+    letter-spacing: -0.02em;
+    text-decoration: none;
+  }
+  .mm-list a[aria-current='page'] {
+    background: var(--sage-tint);
+  }
+  .mm-n {
+    font-size: var(--fs-12);
+    color: var(--graphite);
+  }
+  .mm-foot {
+    margin-top: auto;
+    padding: var(--gutter);
+    display: grid;
+    gap: 8px;
+  }
+</style>

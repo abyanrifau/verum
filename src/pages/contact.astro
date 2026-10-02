@@ -1,0 +1,199 @@
+---
+import { Picture } from 'astro:assets';
+import Base from '../layouts/Base.astro';
+import Icon from '../components/Icon.astro';
+import { site, deliveryZones, whatsappLink } from '../data/site';
+import { faq } from '../data/faq';
+import { editorialImage } from '../lib/catalog';
+import { photo } from '../data/photos';
+import { storeLd, faqLd, breadcrumbLd } from '../lib/seo';
+
+const street = photo('male-street');
+---
+
+<Base
+  title="Delivery, pickup and contact · Malé · VERUM"
+  description="Free same-day delivery in Malé for orders before 4pm, free next-day delivery to Hulhumalé and Villimalé, pickup in Malé, and WhatsApp help."
+  ogImage="/og/contact.png"
+  jsonld={[storeLd(), faqLd(), breadcrumbLd([{ name: 'Home', url: '/' }, { name: 'Delivery and contact', url: '/contact' }])]}
+>
+  <div class="wrap page-head">
+    <p class="eyebrow">Delivery and contact</p>
+    <h1>Ask us anything. Get it today in Malé.</h1>
+    <p class="lede">The fastest answer is WhatsApp. We reply during opening hours, usually within the hour.</p>
+    <div class="page-head-actions">
+      <a class="btn btn--xl" href={whatsappLink('Hi VERUM, I have a question.')} target="_blank" rel="noopener">
+        <Icon name="chat" size={20} /> WhatsApp {site.contact.whatsappDisplay}
+      </a>
+      <a class="btn btn--xl btn--ghost" href={`mailto:${site.contact.email}`}><Icon name="mail" size={20} /> {site.contact.email}</a>
+    </div>
+    <p class="label ct-trade">Brands and distributors: <a href={`mailto:${site.contact.tradeEmail}`}>{site.contact.tradeEmail}</a> · Instagram <a href={site.contact.instagram} rel="noopener" target="_blank">{site.contact.instagramHandle}</a></p>
+  </div>
+
+  <section class="section" aria-labelledby="ct-zones">
+    <div class="wrap ct-grid">
+      <div>
+        <h2 id="ct-zones">Delivery zones and timings</h2>
+        <p class="muted ct-p">Delivery in Malé is free and usually arrives the same day for orders placed before 4pm. Hulhumalé and Villimalé are free, next day.</p>
+      </div>
+      <table class="ct-table">
+        <caption class="sr-only">Delivery options, prices and timings</caption>
+        <thead>
+          <tr><th scope="col">Where</th><th scope="col">Price</th><th scope="col">When</th></tr>
+        </thead>
+        <tbody>
+          {
+            deliveryZones.map((z) => (
+              <tr>
+                <th scope="row">{z.label}</th>
+                <td class="mono">{z.feeLabel}</td>
+                <td>{z.timing}</td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="section section--bone" aria-labelledby="ct-pickup">
+    <div class="wrap ct-split">
+      <div class="ct-pick">
+        <h2 id="ct-pickup">Pickup in Malé</h2>
+        <address class="ct-addr">
+          <span class="mono">VERUM</span><br />
+          {site.address.building}<br />
+          {site.address.street}, {site.address.district}<br />
+          {site.address.city} {site.address.postalCode}, {site.address.countryName}
+        </address>
+        <p class="label">Placeholder address for this concept.</p>
+        <dl class="ct-hours">
+          <div><dt class="mono">Open</dt><dd>{site.pickup.days}, {site.pickup.hours}</dd></div>
+          <div><dt class="mono">Ready</dt><dd>{site.pickup.readyIn}</dd></div>
+          <div><dt class="mono">Bring</dt><dd>Your order number, on your phone is fine</dd></div>
+        </dl>
+      </div>
+      <figure class="ct-fig">
+        <Picture src={editorialImage('male-street')} formats={['avif', 'webp']} fallbackFormat="webp" widths={[400, 700, 1000]} sizes="(min-width: 900px) 45vw, 100vw" alt={street.alt} loading="lazy" />
+        <figcaption class="label">Photo: {street.photographer} on {street.site}</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="section" id="faq" aria-labelledby="ct-faq">
+    <div class="wrap ct-faq">
+      <div>
+        <h2 id="ct-faq">Frequently asked questions</h2>
+        <p class="muted ct-p">Still unsure? <a class="link" href={whatsappLink('Hi VERUM, I have a question.')} target="_blank" rel="noopener">Message us on WhatsApp</a>.</p>
+      </div>
+      <div class="faq-list">
+        {
+          faq.map((f, i) => (
+            <details class="faq-item" id={`faq-${f.id}`} open={i === 0}>
+              <summary>{f.q}</summary>
+              <p>{f.a}</p>
+            </details>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .ct-trade {
+    margin-top: 14px;
+  }
+  .ct-trade a {
+    color: var(--ink);
+  }
+  .ct-grid,
+  .ct-faq {
+    display: grid;
+    gap: 20px;
+  }
+  .ct-p {
+    margin-top: 10px;
+    max-width: 44ch;
+  }
+  .ct-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--fs-15);
+    border-top: 1px solid var(--ink);
+  }
+  .ct-table th,
+  .ct-table td {
+    text-align: left;
+    padding: 12px 10px 12px 0;
+    border-bottom: 1px solid var(--hairline);
+    vertical-align: top;
+  }
+  .ct-table thead th {
+    font-family: var(--font-mono-stack);
+    font-size: var(--fs-12);
+    font-weight: 500;
+    color: var(--graphite);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .ct-table tbody th {
+    font-weight: 600;
+  }
+  .ct-split {
+    display: grid;
+    gap: 24px;
+    align-items: center;
+  }
+  .ct-pick {
+    display: grid;
+    gap: 12px;
+  }
+  .ct-addr {
+    font-style: normal;
+    font-size: var(--fs-18);
+    line-height: 1.5;
+  }
+  .ct-hours {
+    margin: 0;
+    border-top: 1px solid var(--ink);
+  }
+  .ct-hours div {
+    display: grid;
+    grid-template-columns: 80px 1fr;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--hairline);
+  }
+  .ct-hours dt {
+    font-size: var(--fs-12);
+    color: var(--graphite);
+  }
+  .ct-hours dd {
+    margin: 0;
+  }
+  .ct-fig {
+    margin: 0;
+    display: grid;
+    gap: 6px;
+  }
+  .ct-fig :global(img) {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+  }
+  .faq-list {
+    border-top: 1px solid var(--ink);
+  }
+  @media (min-width: 900px) {
+    .ct-grid,
+    .ct-faq {
+      grid-template-columns: 0.8fr 1.2fr;
+      gap: 56px;
+    }
+    .ct-split {
+      grid-template-columns: 1fr 1fr;
+      gap: 56px;
+    }
+  }
+</style>

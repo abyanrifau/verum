@@ -1,0 +1,89 @@
+---
+import { trustPoints } from '../data/site';
+import Icon from './Icon.astro';
+interface Props {
+  compact?: boolean;
+}
+const { compact = false } = Astro.props;
+const icons = { authentic: 'shield', delivery: 'truck', pickup: 'store', checked: 'flask' } as const;
+---
+
+<ul role="list" class:list={['trust', { 'trust--compact': compact }]} aria-label="Why shop with VERUM">
+  {
+    trustPoints.map((t) => (
+      <li class="trust-item">
+        <Icon name={icons[t.id]} size={20} class="trust-icon" />
+        <span>
+          <strong>{t.title}</strong>
+          <span class="trust-text">{t.text}</span>
+        </span>
+      </li>
+    ))
+  }
+</ul>
+
+<style>
+  .trust {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    border-top: 1px solid var(--hairline);
+    border-bottom: 1px solid var(--hairline);
+  }
+  .trust-item {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 12px 12px 12px 0;
+    font-size: var(--fs-13);
+    line-height: 1.35;
+  }
+  .trust-item:nth-child(2n) {
+    padding-left: 12px;
+    border-left: 1px solid var(--hairline);
+  }
+  .trust-item:nth-child(n + 3) {
+    border-top: 1px solid var(--hairline);
+  }
+  .trust-item :global(.trust-icon) {
+    flex-shrink: 0;
+    color: var(--sage-deep);
+    margin-top: 1px;
+  }
+  strong {
+    display: block;
+    font-weight: 600;
+    font-size: var(--fs-14);
+  }
+  .trust-text {
+    color: var(--graphite);
+  }
+  @media (min-width: 900px) {
+    .trust {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+    .trust-item {
+      padding: 16px 16px;
+    }
+    .trust-item:first-child {
+      padding-left: 0;
+    }
+    .trust-item + .trust-item {
+      border-left: 1px solid var(--hairline);
+    }
+    .trust-item:nth-child(n + 3) {
+      border-top: 0;
+    }
+  }
+  .trust--compact .trust-item {
+    padding-block: 10px;
+  }
+  @media (max-width: 899px) {
+    .trust--compact .trust-text {
+      display: none;
+    }
+    .trust--compact .trust-item {
+      padding-block: 8px;
+      align-items: center;
+    }
+  }
+</style>

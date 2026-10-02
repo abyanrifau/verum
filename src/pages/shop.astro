@@ -1,0 +1,240 @@
+---
+import Base from '../layouts/Base.astro';
+import ProductCard from '../components/ProductCard.astro';
+import TrustStrip from '../components/TrustStrip.astro';
+import ShopFacets, { type Facet } from '../islands/shop/ShopFacets';
+import ShopToolbar from '../islands/shop/ShopToolbar';
+import { products, brands, ingredients, brandName, productUrl, productIngredientSlugs } from '../lib/catalog';
+import { categories, steps, skinTypes, concerns } from '../data/taxonomy';
+import { itemListLd, breadcrumbLd } from '../lib/seo';
+
+const BANDS = [
+  { id: '0-250', label: 'Under MVR 250', min: 0, max: 250 },
+  { id: '250-450', label: 'MVR 250 to 449', min: 250, max: 450 },
+  { id: '450-650', label: 'MVR 450 to 649', min: 450, max: 650 },
+  { id: '650-', label: 'MVR 650 and over', min: 650, max: Infinity },
+];
+const n = (f: (p: (typeof products)[number]) => boolean) => products.filter(f).length;
+const facets: Facet[] = [
+  { key: 'category', label: 'Category', options: categories.map((c) => ({ id: c.id, label: c.label, count: n((p) => p.category === c.id) })) },
+  { key: 'step', label: 'Routine step', options: steps.map((s) => ({ id: s.id, label: `${s.n} ${s.label}`, count: n((p) => p.step === s.id) })) },
+  { key: 'skin', label: 'Skin type', options: skinTypes.map((s) => ({ id: s.id, label: s.label, count: n((p) => p.skinTypes.includes(s.id)) })) },
+  { key: 'concern', label: 'Concern', options: concerns.map((c) => ({ id: c.id, label: c.label, count: n((p) => p.concerns.includes(c.id)) })), collapse: 6 },
+  {
+    key: 'brand',
+    label: 'Brand',
+    options: [...brands].sort((a, b) => a.name.localeCompare(b.name)).map((b) => ({ id: b.slug, label: b.name, count: n((p) => p.brand === b.slug) })),
+    collapse: 6,
+  },
+  {
+    key: 'ing',
+    label: 'Ingredient',
+    options: [...ingredients]
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .map((i) => ({ id: i.slug, label: i.name, count: n((p) => productIngredientSlugs(p).includes(i.slug)) })),
+    collapse: 6,
+  },
+  { key: 'price', label: 'Price', options: BANDS.map((b) => ({ id: b.id, label: b.label, count: n((p) => p.price >= b.min && p.price < b.max) })) },
+];
+const labels = Object.fromEntries(facets.map((f) => [f.key, f.options]));
+const ordered = [...products].sort((a, b) => a.featured - b.featured);
+---
+
+<Base
+  title="Shop all skincare · 50 products, 21 brands · VERUM"
+  description="Every product we stock, with prices in MVR, published ingredient strengths and one-tap add to cart. Filter by skin type, concern, brand or ingredient."
+  ogImage="/og/shop.png"
+  jsonld={[
+    itemListLd('VERUM shop', ordered.map((p) => ({ url: productUrl(p), name: `${brandName(p)} ${p.name}` }))),
+    breadcrumbLd([
+      { name: 'Home', url: '/' },
+      { name: 'Shop', url: '/shop' },
+    ]),
+  ]}
+>
+  <div class="wrap page-head shop-head">
+    <h1>Shop all skincare</h1>
+    <p class="lede">{products.length} products from {brands.length} brands. Every price includes GST. Not sure where to start? <a class="link" href="/quiz">Take the 30-second quiz</a>.</p>
+  </div>
+
+  <div class="wrap shop">
+    <aside class="shop-side" aria-label="Filters">
+      <ShopFacets client:idle facets={facets} />
+    </aside>
+    <div class="shop-main">
+      <div class="shop-bar">
+        <p class="mono shop-count" id="shop-count" aria-hidden="true">{products.length} products</p>
+        <ShopToolbar client:idle labels={labels} total={products.length} />
+      </div>
+      <h2 class="sr-only">Products</h2>
+      <ul role="list" class="pgrid shop-grid" id="shop-grid">
+        {
+          ordered.map((p, i) => (
+            <li
+              class="pgrid-item"
+              data-category={p.category}
+              data-step={p.step}
+              data-skin={p.skinTypes.join(' ')}
+              data-concern={p.concerns.join(' ')}
+              data-brand={p.brand}
+              data-ing={productIngredientSlugs(p).join(' ')}
+              data-price={p.price}
+              data-featured={p.featured}
+              data-sales={p.salesRank}
+              data-added={p.addedOn}
+            >
+              <ProductCard product={p} heading="h3" eager={i < 4} priority={i < 2} sizes="(min-width: 1320px) 250px, (min-width: 1024px) 19vw, (min-width: 640px) 31vw, 47vw" />
+            </li>
+          ))
+        }
+      </ul>
+      <script is:inline>
+        // Apply URL filters before first paint so deep links never flash the full grid.
+        (function () {
+          var q = new URLSearchParams(location.search);
+          var keys = ['category', 'step', 'skin', 'concern', 'brand', 'ing', 'price'];
+          var sel = {};
+          var any = false;
+          keys.forEach(function (k) {
+            var v = (q.get(k) || '').split(',').filter(Boolean);
+            sel[k] = v;
+            if (v.length) any = true;
+          });
+          var sort = q.get('sort');
+          var grid = document.getElementById('shop-grid');
+          if (!grid || (!any && !sort)) return;
+          var items = Array.prototype.slice.call(grid.children);
+          var shown = 0;
+          items.forEach(function (li) {
+            var ok = keys.every(function (k) {
+              if (!sel[k].length) return true;
+              if (k === 'price') {
+                var pr = Number(li.dataset.price);
+                return sel[k].some(function (b) {
+                  var p = b.split('-');
+                  return pr >= Number(p[0] || 0) && pr < (p[1] ? Number(p[1]) : Infinity);
+                });
+              }
+              var have = (li.dataset[k] || '').split(' ');
+              return sel[k].some(function (v) {
+                return have.indexOf(v) > -1;
+              });
+            });
+            li.hidden = !ok;
+            if (ok) shown++;
+          });
+          var num = function (el, k) {
+            return Number(el.dataset[k] || 0);
+          };
+          var cmp = {
+            bestsellers: function (a, b) { return num(a, 'sales') - num(b, 'sales'); },
+            newest: function (a, b) { return (b.dataset.added || '').localeCompare(a.dataset.added || ''); },
+            'price-asc': function (a, b) { return num(a, 'price') - num(b, 'price'); },
+            'price-desc': function (a, b) { return num(b, 'price') - num(a, 'price'); },
+          }[sort];
+          if (cmp) items.sort(cmp).forEach(function (li) { grid.appendChild(li); });
+          var c = document.getElementById('shop-count');
+          if (c) c.textContent = shown + (shown === 1 ? ' product' : ' products');
+          var e = document.getElementById('shop-empty');
+          if (e) e.hidden = shown > 0;
+        })();
+      </script>
+      <div id="shop-empty" class="shop-empty" hidden>
+        <p class="shop-empty-t">No products match all of those filters.</p>
+        <p class="muted">Remove a filter, or let the quiz pick for you.</p>
+        <div class="page-head-actions">
+          <a class="btn" href="/shop">Reset filters</a>
+          <a class="btn btn--quiet" href="/quiz">Find your routine in 30 seconds</a>
+        </div>
+      </div>
+      <div class="shop-trust">
+        <TrustStrip compact />
+      </div>
+    </div>
+  </div>
+</Base>
+
+<style>
+  .shop-head {
+    padding-bottom: 12px;
+  }
+  .shop {
+    display: grid;
+    gap: 16px;
+    padding-bottom: var(--section-y);
+  }
+  .shop-bar {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+    min-height: 44px;
+  }
+  .shop-main {
+    min-width: 0;
+  }
+  @media (max-width: 1023px) {
+    .shop-bar {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 8px;
+    }
+  }
+  .shop-count {
+    font-size: var(--fs-13);
+    white-space: nowrap;
+  }
+  .shop-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    border-top: 1px solid var(--hairline);
+    border-left: 1px solid var(--hairline);
+  }
+  .shop-grid > li {
+    display: flex;
+    background: var(--paper);
+    min-width: 0;
+  }
+  .shop-grid > li > :global(*) {
+    flex: 1;
+  }
+  .shop-empty {
+    padding: 32px 0;
+    display: grid;
+    gap: 6px;
+  }
+  .shop-empty-t {
+    font-weight: 600;
+    font-size: var(--fs-20);
+  }
+  .shop-trust {
+    margin-top: 24px;
+  }
+  @media (min-width: 640px) {
+    .shop-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+  @media (max-width: 1023px) {
+    .shop-side :global(.sf) {
+      display: none;
+    }
+  }
+  @media (min-width: 1024px) {
+    .shop {
+      grid-template-columns: 240px minmax(0, 1fr);
+      gap: 28px;
+      align-items: start;
+    }
+    .shop-side {
+      position: sticky;
+      top: calc(var(--header-h) + 12px);
+      max-height: calc(100dvh - var(--header-h) - 24px);
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+    .shop-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+</style>

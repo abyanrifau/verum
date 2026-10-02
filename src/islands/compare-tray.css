@@ -1,0 +1,106 @@
+.compare-tray {
+  position: fixed;
+  left: 50%;
+  bottom: calc(12px + var(--bottom-ui, 0px) + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  z-index: 30;
+  width: min(560px, calc(100vw - 24px));
+  background: var(--paper);
+  border: 1px solid var(--ink);
+  box-shadow: var(--shadow-panel);
+  animation: tray-in 260ms var(--ease);
+}
+@keyframes tray-in {
+  from { transform: translate(-50%, 16px); opacity: 0; }
+}
+.ct-inner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+}
+.ct-label {
+  font-size: var(--fs-12);
+  white-space: nowrap;
+}
+.ct-slots {
+  display: flex;
+  gap: 6px;
+}
+.ct-slot {
+  width: 40px;
+  height: 40px;
+}
+.ct-thumb {
+  position: relative;
+  display: block;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid var(--hairline);
+  background: var(--bone);
+}
+.ct-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.ct-x {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 18px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+  background: var(--ink);
+  color: var(--paper);
+  border-radius: 50%;
+}
+.ct-empty {
+  display: block;
+  width: 40px;
+  height: 40px;
+  border: 1px dashed var(--line-strong);
+}
+.ct-go {
+  margin-left: auto;
+}
+.ct-clear {
+  min-height: 36px;
+  padding: 0 4px;
+  border: 0;
+  background: transparent;
+  color: var(--graphite);
+  font-size: var(--fs-13);
+  text-decoration: underline;
+}
+@media (max-width: 899px) {
+  /* Phones: a small pill in the corner, so it never sits over a buy button. */
+  .compare-tray {
+    left: auto;
+    right: 12px;
+    width: auto;
+    transform: none;
+    border-radius: var(--radius-pill);
+    animation: tray-in-m 220ms var(--ease);
+  }
+  @keyframes tray-in-m {
+    from { transform: translateY(12px); opacity: 0; }
+  }
+  .ct-inner {
+    padding: 4px 4px 4px 6px;
+    gap: 2px;
+  }
+  .ct-label,
+  .ct-slots {
+    display: none;
+  }
+  .ct-go {
+    border-radius: var(--radius-pill);
+  }
+  .ct-clear {
+    min-width: 40px;
+  }
+}
+body.has-tray .site-footer { padding-bottom: 76px; }

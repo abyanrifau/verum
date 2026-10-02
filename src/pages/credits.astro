@@ -1,0 +1,127 @@
+---
+import Base from '../layouts/Base.astro';
+import { photos } from '../data/photos';
+import { brands, productsByBrand } from '../lib/catalog';
+import { breadcrumbLd } from '../lib/seo';
+---
+
+<Base
+  title="Photo credits · VERUM"
+  description="Credits for the editorial stock photography used on this concept site, and the official brand sources of every product image."
+  ogImage="/og/credits.png"
+  jsonld={[breadcrumbLd([{ name: 'Home', url: '/' }, { name: 'Credits', url: '/credits' }])]}
+>
+  <div class="wrap page-head">
+    <p class="eyebrow">Credits</p>
+    <h1>Photo credits</h1>
+    <p class="lede">Editorial photos are free stock images, graded to one cool, neutral look. Product images are the brands’ own, downloaded from their official sites.</p>
+    <div class="page-head-actions">
+      <a class="btn" href="/shop">Shop all products</a>
+      <a class="btn btn--quiet" href="/quiz">Find your routine in 30 seconds</a>
+    </div>
+  </div>
+
+  <section class="section" aria-labelledby="cr-ed">
+    <div class="wrap">
+      <h2 id="cr-ed" class="cr-h">Editorial photography</h2>
+      <table class="cr-table">
+        <caption class="sr-only">Stock photo credits</caption>
+        <thead><tr><th scope="col">Photo</th><th scope="col">Photographer</th><th scope="col">Source and licence</th></tr></thead>
+        <tbody>
+          {
+            photos.map((p) => (
+              <tr>
+                <th scope="row">{p.alt}</th>
+                <td><a href={p.photographerUrl} rel="noopener nofollow" target="_blank">{p.photographer}</a></td>
+                <td><a href={p.photoUrl} rel="noopener nofollow" target="_blank">{p.site}</a>, {p.license}</td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="section section--bone" aria-labelledby="cr-prod">
+    <div class="wrap">
+      <h2 id="cr-prod" class="cr-h">Product images</h2>
+      <p class="cr-p">Brand names and product images belong to their respective owners. Every product image was downloaded from the brand’s official website, then placed on a uniform tile. Images are not hotlinked.</p>
+      <ul role="list" class="cr-brands">
+        {
+          brands.map((b) => (
+            <li>
+              <span>{b.name}</span>
+              <a class="mono" href={b.website} rel="noopener nofollow" target="_blank">{new URL(b.website).hostname.replace(/^www\./, '')}</a>
+              <span class="mono muted">{productsByBrand(b.slug).length}</span>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .cr-h {
+    font-size: var(--fs-h3);
+    margin-bottom: 14px;
+  }
+  .cr-p {
+    max-width: 68ch;
+    margin-bottom: 16px;
+  }
+  .cr-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--fs-14);
+    border-top: 1px solid var(--ink);
+  }
+  .cr-table th,
+  .cr-table td {
+    text-align: left;
+    padding: 10px 10px 10px 0;
+    border-bottom: 1px solid var(--hairline);
+    vertical-align: top;
+  }
+  .cr-table thead th {
+    font-family: var(--font-mono-stack);
+    font-size: var(--fs-12);
+    font-weight: 500;
+    color: var(--graphite);
+  }
+  .cr-table tbody th {
+    font-weight: 400;
+  }
+  .cr-brands {
+    display: grid;
+    gap: 0;
+    border-top: 1px solid var(--ink);
+  }
+  .cr-brands li {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto 32px;
+    gap: 12px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--hairline);
+    font-size: var(--fs-14);
+  }
+  .cr-brands a {
+    color: var(--ink);
+    font-size: var(--fs-13);
+  }
+  @media (max-width: 600px) {
+    .cr-table thead {
+      display: none;
+    }
+    .cr-table tr {
+      display: grid;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--hairline);
+    }
+    .cr-table th,
+    .cr-table td {
+      border: 0;
+      padding: 2px 0;
+    }
+  }
+</style>

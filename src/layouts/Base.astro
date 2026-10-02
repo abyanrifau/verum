@@ -1,0 +1,144 @@
+---
+import '../styles/global.css';
+import { ClientRouter } from 'astro:transitions';
+import { Font } from 'astro:assets';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import CartDrawer from '../islands/CartDrawer';
+import CompareTray from '../islands/CompareTray';
+import { abs } from '../lib/seo';
+
+interface Preload {
+  href: string;
+  srcset?: string;
+  sizes?: string;
+  type?: string;
+}
+interface Props {
+  title: string;
+  description: string;
+  /** Path of the OG image, absolute or root-relative. */
+  ogImage?: string;
+  ogImageAlt?: string;
+  ogType?: 'website' | 'product' | 'article';
+  noindex?: boolean;
+  jsonld?: Record<string, unknown>[];
+  preloadImage?: Preload;
+  preloadCatalog?: boolean;
+  hideQuizCta?: boolean;
+}
+
+const {
+  title,
+  description,
+  ogImage = '/og/home.png',
+  ogImageAlt = 'VERUM — Formula first. Skincare shop in Malé.',
+  ogType = 'website',
+  noindex = false,
+  jsonld = [],
+  preloadImage,
+  preloadCatalog = false,
+  hideQuizCta = false,
+} = Astro.props;
+
+const path = Astro.url.pathname.replace(/\.html$/, '').replace(/\/index$/, '').replace(/\/$/, '') || '/';
+const canonical = abs(path);
+const fullTitle = title;
+if (import.meta.env.DEV) {
+  if (fullTitle.length > 60) console.warn(`[seo] title over 60 chars (${fullTitle.length}): ${fullTitle}`);
+  if (description.length > 155) console.warn(`[seo] description over 155 chars (${description.length}): ${path}`);
+}
+---
+
+<!doctype html>
+<html lang="en-MV" dir="ltr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    {noindex && <meta name="robots" content="noindex, follow" />}
+    <meta name="theme-color" content="#FAFAF8" />
+    <meta name="color-scheme" content="light" />
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+
+    <meta property="og:site_name" content="VERUM" />
+    <meta property="og:type" content={ogType} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={abs(ogImage)} />
+    <meta property="og:image:alt" content={ogImageAlt} />
+    <meta property="og:locale" content="en_GB" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={abs(ogImage)} />
+    <meta name="twitter:image:alt" content={ogImageAlt} />
+
+    <Font cssVariable="--font-sans" preload />
+    <Font cssVariable="--font-mono" />
+    {
+      preloadImage && (
+        <link
+          rel="preload"
+          as="image"
+          href={preloadImage.href}
+          imagesrcset={preloadImage.srcset}
+          imagesizes={preloadImage.sizes}
+          type={preloadImage.type}
+          fetchpriority="high"
+        />
+      )
+    }
+    {preloadCatalog && <link rel="preload" href="/catalog.json" as="fetch" crossorigin="anonymous" />}
+    {jsonld.map((j) => <script type="application/ld+json" set:html={JSON.stringify(j)} />)}
+    <script is:inline>
+      document.documentElement.classList.add('js');
+      document.addEventListener('astro:after-swap', function () {
+        document.documentElement.classList.add('js');
+      });
+    </script>
+    <ClientRouter fallback="swap" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <Header hideQuizCta={hideQuizCta} />
+    <main id="main" tabindex="-1">
+      <slot />
+    </main>
+    <Footer />
+    <CartDrawer client:load transition:persist="cart-drawer" />
+    <CompareTray client:idle transition:persist="compare-tray" />
+    <script>
+      import '../scripts/global';
+    </script>
+  </body>
+</html>
+
+<style is:global>
+  .skip-link {
+    position: fixed;
+    left: 12px;
+    top: -60px;
+    z-index: 100;
+    padding: 10px 14px;
+    background: var(--ink);
+    color: var(--paper);
+    font-weight: 600;
+    text-decoration: none;
+    border-radius: var(--radius);
+    transition: top 160ms var(--ease);
+  }
+  .skip-link:focus {
+    top: 12px;
+  }
+  main:focus {
+    outline: none;
+  }
+</style>

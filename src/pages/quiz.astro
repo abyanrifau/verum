@@ -1,0 +1,72 @@
+---
+import Base from '../layouts/Base.astro';
+import Quiz from '../islands/Quiz';
+import { breadcrumbLd } from '../lib/seo';
+---
+
+<Base
+  title="Skin quiz · Find your routine in 30 seconds · VERUM"
+  description="Three tap-only questions build a full AM and PM routine with prices, reasons and the bundle discount applied. No email, no account."
+  ogImage="/og/quiz.png"
+  hideQuizCta
+  jsonld={[breadcrumbLd([{ name: 'Home', url: '/' }, { name: 'Skin quiz', url: '/quiz' }])]}
+>
+  <div class="wrap quiz-page">
+    <h1 class="quiz-h1">Find your routine in 30 seconds.</h1>
+    <Quiz client:load />
+  </div>
+  <section class="section quiz-how" aria-labelledby="how-h">
+    <div class="wrap how-grid">
+      <h2 id="how-h">How the ranking works</h2>
+      <ol role="list" class="how-list">
+        <li><span class="mono">01</span> Skin type match. Products suited to your skin type score higher.</li>
+        <li><span class="mono">02</span> Your priority. The ingredient doing the work is named in the reason, for example: contains niacinamide for pores.</li>
+        <li><span class="mono">03</span> Your tolerance. Strong acids and retinoids drop out if your skin reacts easily, and fragrance-free formulas rise.</li>
+        <li><span class="mono">04</span> Ties. Only then do bestsellers break a tie. No brand pays for placement.</li>
+      </ol>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .quiz-page {
+    padding-top: 14px;
+    padding-bottom: 40px;
+    min-height: 70vh;
+  }
+  .quiz-h1 {
+    font-size: var(--fs-14);
+    font-family: var(--font-mono-stack);
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    color: var(--graphite);
+    margin-bottom: 10px;
+  }
+  .how-grid {
+    display: grid;
+    gap: 16px;
+  }
+  .how-grid h2 {
+    font-size: var(--fs-h3);
+  }
+  .how-list {
+    border-top: 1px solid var(--hairline);
+    max-width: 72ch;
+  }
+  .how-list li {
+    display: grid;
+    grid-template-columns: 36px 1fr;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--hairline);
+    color: var(--graphite);
+  }
+  .how-list .mono {
+    color: var(--sage-deep);
+    font-size: var(--fs-13);
+  }
+  @media (min-width: 900px) {
+    .how-grid {
+      grid-template-columns: 0.6fr 1.4fr;
+    }
+  }
+</style>

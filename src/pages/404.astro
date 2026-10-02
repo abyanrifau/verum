@@ -1,0 +1,62 @@
+---
+import Base from '../layouts/Base.astro';
+import ProductGrid from '../components/ProductGrid.astro';
+import Icon from '../components/Icon.astro';
+import { bestsellers } from '../lib/catalog';
+
+const best = bestsellers().slice(0, 4);
+---
+
+<Base
+  title="Page not found · VERUM"
+  description="This page is not on the shelf. Search the shop, take the 30-second skin quiz or browse our bestsellers."
+  ogImage="/og/not-found.png"
+  noindex
+>
+  <div class="wrap page-head nf">
+    <p class="eyebrow mono">404 · not on the shelf</p>
+    <h1>This page is not on the shelf.</h1>
+    <p class="lede">The link may be old, or the product may have changed name. Search, or let three taps pick a routine for you.</p>
+    <button type="button" class="nf-search" data-search-open>
+      <Icon name="search" /> <span>Search products, brands and ingredients</span> <kbd class="mono">/</kbd>
+    </button>
+    <div class="page-head-actions">
+      <a class="btn btn--lg" href="/quiz">Find your routine in 30 seconds</a>
+      <a class="btn btn--lg btn--quiet" href="/shop">Shop all</a>
+    </div>
+  </div>
+  <section class="section" aria-labelledby="nf-best">
+    <div class="wrap">
+      <div class="section-head">
+        <h2 id="nf-best">Bestsellers</h2>
+      </div>
+      <ProductGrid products={best} heading="h3" />
+    </div>
+  </section>
+</Base>
+
+<style>
+  .nf-search {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    max-width: 560px;
+    min-height: 56px;
+    margin-top: 20px;
+    padding: 0 16px;
+    border: 1px solid var(--ink);
+    background: #fff;
+    color: var(--graphite);
+    text-align: left;
+    font-size: var(--fs-16);
+  }
+  .nf-search span {
+    flex: 1;
+  }
+  .nf-search kbd {
+    font-size: 12px;
+    border: 1px solid var(--hairline);
+    padding: 1px 6px;
+  }
+</style>

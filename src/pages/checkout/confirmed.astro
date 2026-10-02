@@ -1,0 +1,29 @@
+---
+import Base from '../../layouts/Base.astro';
+import Confirmation from '../../islands/Confirmation';
+---
+
+<Base
+  title="Order confirmed · VERUM"
+  description="Your VERUM order summary, delivery timing and printable routine. A Nuit Works concept: no order is placed and no payment is taken."
+  ogImage="/og/checkout.png"
+  noindex
+  preloadCatalog
+>
+  <div class="wrap page-head">
+    <h1>Order confirmed</h1>
+  </div>
+  <div class="wrap cf-wrap">
+    <Confirmation client:load />
+  </div>
+</Base>
+
+<style>
+  .page-head {
+    padding-bottom: 12px;
+  }
+  .cf-wrap {
+    padding-bottom: var(--section-y);
+    min-height: 60vh;
+  }
+</style>

@@ -1,0 +1,790 @@
+---
+import { Picture, getImage } from 'astro:assets';
+import Base from '../layouts/Base.astro';
+import TrustStrip from '../components/TrustStrip.astro';
+import ProductGrid from '../components/ProductGrid.astro';
+import FormulaBreakdown from '../components/FormulaBreakdown.astro';
+import Icon from '../components/Icon.astro';
+import { products, brands, ingredients, bestsellers, newArrivals, productBySlug, productImage, productUrl, brandName, productsByBrand, reviewsFor } from '../lib/catalog';
+import { concerns, skinTypes, priorities, tolerances } from '../data/taxonomy';
+import { faq } from '../data/faq';
+import { site } from '../data/site';
+import { storeLd } from '../lib/seo';
+import { mvr } from '../lib/money';
+import { tiers } from '../lib/bundle';
+
+const hero = productBySlug.get('beauty-of-joseon-relief-sun-spf50')!;
+const heroImg = productImage(hero.images[0]);
+const heroSizes = '(min-width: 1100px) 300px, (min-width: 768px) 26vw, 40vw';
+const heroAvif = await Promise.all([240, 320, 480, 640].map((w) => getImage({ src: heroImg, width: w, format: 'avif' })));
+const preload = {
+  href: heroAvif[1].src,
+  srcset: heroAvif.map((i) => `${i.src} ${i.attributes.width}w`).join(', '),
+  sizes: heroSizes,
+  type: 'image/avif',
+};
+
+const best = bestsellers().slice(0, 8);
+const fresh = newArrivals().slice(0, 4);
+const tileConcerns = concerns.filter((c) => c.tile);
+const count = (c: string) => products.filter((p) => p.concerns.includes(c as never)).length;
+const chipIngredients = ['niacinamide', 'retinol', 'vitamin-c', 'hyaluronic-acid', 'salicylic-acid', 'centella-asiatica', 'ceramides', 'azelaic-acid', 'uv-filters', 'tranexamic-acid'].map(
+  (s) => ingredients.find((i) => i.slug === s)!,
+);
+const examples = ['anua-niacinamide-10-txa-4-serum', 'cosrx-advanced-snail-96-mucin-power-essence', 'beauty-of-joseon-glow-serum-propolis-niacinamide'].map(
+  (s) => productBySlug.get(s)!,
+);
+const sample = ['cosrx-advanced-snail-96-mucin-power-essence', 'beauty-of-joseon-relief-sun-spf50', 'anua-heartleaf-77-soothing-toner']
+  .map((s) => ({ p: productBySlug.get(s)!, r: reviewsFor(productBySlug.get(s)!)[0] }))
+  .filter((x) => x.r);
+const shortFaq = faq.filter((f) => f.short).slice(0, 5);
+const heroPub = hero.keyIngredients;
+---
+
+<Base
+  title="VERUM · Skincare that earns its place, Malé"
+  description="Korean and Western skincare, bought directly and formula-checked. Free same-day delivery in Malé. Take the 30-second quiz for a full routine."
+  ogImage="/og/home.png"
+  preloadImage={preload}
+  jsonld={[storeLd()]}
+>
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div class="hero-copy">
+        <p class="eyebrow hero-eyebrow">{site.tagline} Malé, Maldives</p>
+        <h1>{site.headline}</h1>
+        <p class="lede hero-lede">
+          Korean and Western skincare, bought directly and formula-checked. Free same-day delivery in Malé.
+        </p>
+        <div class="hero-actions">
+          <a href="/quiz" class="btn btn--xl">Find your routine in 30 seconds</a>
+          <a href="/shop" class="btn btn--xl btn--ghost">Shop all</a>
+        </div>
+        <p class="label hero-meta">3 questions · no email · a full AM and PM routine, priced, with up to {tiers[tiers.length - 1].percent}% off</p>
+      </div>
+
+      <aside class="readout" aria-label={`Featured: ${brandName(hero)} ${hero.short}`}>
+        <div class="readout-head mono">
+          <span>{hero.code}</span><span>Bestseller · {hero.size}</span>
+        </div>
+        <a href={productUrl(hero)} class="readout-img" data-vt={hero.slug} data-card={hero.slug} tabindex="-1" aria-hidden="true">
+          <span class="tile">
+            <Picture
+              src={heroImg}
+              formats={['avif', 'webp']}
+        fallbackFormat="webp"
+              widths={[240, 320, 480, 640]}
+              sizes={heroSizes}
+              alt=""
+              loading="eager"
+              fetchpriority="high"
+              decoding="sync"
+              data-vt-img
+            />
+          </span>
+        </a>
+        <div class="readout-body">
+          <p class="label">{brandName(hero)}</p>
+          <p class="readout-name"><a href={productUrl(hero)}>{hero.short}</a></p>
+          <ul role="list" class="readout-rows mono">
+            {
+              heroPub.map((k) => (
+                <li>
+                  <span>{k.name}</span>
+                  <span class:list={{ np: !k.concentration }}>{k.concentration ?? 'Not published'}</span>
+                </li>
+              ))
+            }
+          </ul>
+          <div class="readout-buy">
+            <span class="mono readout-price">{mvr(hero.price)}</span>
+            <button type="button" class="btn" data-add={hero.code} aria-label={`Add to cart: ${brandName(hero)} ${hero.short}, ${mvr(hero.price)}`}>
+              <span data-label="Add to cart">Add to cart</span>
+            </button>
+          </div>
+        </div>
+      </aside>
+    </div>
+    <div class="wrap">
+      <TrustStrip />
+    </div>
+  </section>
+
+  <section class="section quiz-promo" aria-labelledby="qp-h">
+    <div class="wrap qp-grid">
+      <div class="qp-copy reveal">
+        <p class="eyebrow">Skin quiz · 30 seconds</p>
+        <h2 id="qp-h">Three taps to a full routine.</h2>
+        <p class="lede">Answer three questions. Get one pick per step, two alternatives, the reason each one ranked, and the bundle discount already applied.</p>
+        <a href="/quiz" class="btn btn--lg">Start the quiz</a>
+        <p class="label qp-note"><Icon name="check" size={14} /> No email required. Nothing leaves your device.</p>
+      </div>
+      <ol role="list" class="qp-steps reveal">
+        <li>
+          <span class="qp-n mono">01</span>
+          <div>
+            <p class="qp-q">Your skin type</p>
+            <p class="qp-a">{skinTypes.map((s) => s.label).join(' · ')}</p>
+          </div>
+        </li>
+        <li>
+          <span class="qp-n mono">02</span>
+          <div>
+            <p class="qp-q">Your priority</p>
+            <p class="qp-a">{priorities.map((p) => p.label).join(' · ')}</p>
+          </div>
+        </li>
+        <li>
+          <span class="qp-n mono">03</span>
+          <div>
+            <p class="qp-q">Your tolerance</p>
+            <p class="qp-a">{tolerances.map((t) => t.label).join(' · ')}</p>
+          </div>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="best-h">
+    <div class="wrap">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">Ranked by units sold</p>
+          <h2 id="best-h">Bestsellers</h2>
+        </div>
+        <a href="/shop?sort=bestsellers" class="link-arrow">All bestsellers</a>
+      </div>
+      <ProductGrid products={best} heading="h3" row />
+    </div>
+  </section>
+
+  <section class="section section--bone" aria-labelledby="concern-h">
+    <div class="wrap">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">Shop by concern</p>
+          <h2 id="concern-h">Start with what you want to change.</h2>
+        </div>
+      </div>
+      <ul role="list" class="concerns">
+        {
+          tileConcerns.map((c) => (
+            <li>
+              <a href={`/shop?concern=${c.id}`} class="concern">
+                <span class="concern-n mono">{count(c.id)} products</span>
+                <span class="concern-t">{c.tile}</span>
+                <span class="concern-b">{c.blurb}</span>
+                <span class="concern-go" aria-hidden="true"><Icon name="arrow" size={18} /></span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="ing-h">
+    <div class="wrap ing-teaser">
+      <div class="reveal">
+        <p class="eyebrow">Ingredient explorer</p>
+        <h2 id="ing-h">What each ingredient actually does.</h2>
+        <p class="muted ing-copy">Plain English, who it suits, when to use it, what not to layer it with, and every product we stock that contains it.</p>
+      </div>
+      <ul role="list" class="chip-row ing-chips">
+        {
+          chipIngredients.map((i) => (
+            <li>
+              <a class="chip" href={`/ingredients?i=${i.slug}`}>
+                {i.name} <span class="mono">{products.filter((p) => p.keyIngredients.some((k) => k.ingredient === i.slug)).length}</span>
+              </a>
+            </li>
+          ))
+        }
+        <li><a class="chip chip--all" href="/ingredients">All {ingredients.length} ingredients →</a></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="section section--bone" aria-labelledby="rb-h">
+    <div class="wrap rb-teaser">
+      <div class="reveal">
+        <p class="eyebrow">Routine builder</p>
+        <h2 id="rb-h">Build your AM and PM routine, save up to 15 percent.</h2>
+        <p class="muted rb-copy">
+          Each different product is one routine step. {tiers.map((t) => `${t.minSteps} steps: ${t.percent}% off`).join('. ')}. It applies by itself, in the cart, the builder and the quiz.
+        </p>
+        <a href="/routine" class="btn btn--lg">Open the routine builder</a>
+      </div>
+      <div class="rb-diagram reveal" aria-hidden="true">
+        {
+          [
+            ['AM', ['Cleanse', 'Treat', 'Hydrate', 'Protect']],
+            ['PM', ['Cleanse', 'Exfoliate', 'Treat', 'Hydrate']],
+          ].map(([t, list]) => (
+            <div class="rbd-col">
+              <p class="mono rbd-t">{t}</p>
+              {(list as string[]).map((s, i) => (
+                <p class="rbd-slot">
+                  <span class="mono">{String(i + 1).padStart(2, '0')}</span> {s}
+                </p>
+              ))}
+            </div>
+          ))
+        }
+        <div class="rbd-tier">
+          <span class="mono">3 steps −10%</span><span class="mono">5 steps −15%</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="new-h">
+    <div class="wrap">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">Added in the last 60 days</p>
+          <h2 id="new-h">New arrivals</h2>
+        </div>
+        <a href="/shop?sort=newest" class="link-arrow">Everything new</a>
+      </div>
+      <ProductGrid products={fresh} heading="h3" row />
+    </div>
+  </section>
+
+  <section class="section section--bone" aria-labelledby="fc-h">
+    <div class="wrap fc-grid">
+      <div class="fc-copy reveal">
+        <p class="eyebrow">Every product, formula-checked</p>
+        <h2 id="fc-h">We read the formula before we agree to stock anything.</h2>
+        <p class="muted">Every product page shows its key ingredients and the strengths the brand publishes. Where a brand publishes nothing, the row says so. We do not estimate.</p>
+        <div class="fc-tabs" role="tablist" aria-label="Example formulas">
+          {
+            examples.map((p, i) => (
+              <button type="button" role="tab" id={`fct-${i}`} aria-controls={`fcp-${i}`} aria-selected={i === 0 ? 'true' : 'false'} tabindex={i === 0 ? 0 : -1} class="fc-tab">
+                <span class="mono">{p.code}</span> {brandName(p)} {p.short.split(':')[0]}
+              </button>
+            ))
+          }
+        </div>
+      </div>
+      <div class="fc-panels">
+        {
+          examples.map((p, i) => (
+            <div role="tabpanel" id={`fcp-${i}`} aria-labelledby={`fct-${i}`} hidden={i !== 0} class="fc-panel">
+              <FormulaBreakdown product={p} heading="h3" title={`${brandName(p)} ${p.short}`} id={`home-fb-${i}`} />
+              <a class="link-arrow" href={productUrl(p)}>View {p.short.split(':')[0]}, {mvr(p.price)}</a>
+            </div>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="brands-h">
+    <div class="wrap">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">{brands.length} brands · bought directly</p>
+          <h2 id="brands-h">Brands we stock</h2>
+        </div>
+        <a href="/brands" class="link-arrow">All brands</a>
+      </div>
+      <ul role="list" class="brand-strip">
+        {
+          brands.map((b) => (
+            <li>
+              <a href={`/brands/${b.slug}`}>
+                <span class="bs-name">{b.name}</span>
+                <span class="mono bs-meta">{b.origin} · {productsByBrand(b.slug).length}</span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <section class="section section--bone" aria-labelledby="rev-h">
+    <div class="wrap">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">Reviews</p>
+          <h2 id="rev-h">What shoppers say</h2>
+        </div>
+        <p class="label sample-note">Sample reviews written for this concept.</p>
+      </div>
+      <ul role="list" class="reviews">
+        {
+          sample.map(({ p, r }) => (
+            <li class="review">
+              <p class="review-stars" aria-label={`${r.rating} out of 5`}>{'★'.repeat(r.rating)}{'☆'.repeat(5 - r.rating)}</p>
+              <p class="review-text">“{r.text}”</p>
+              <p class="label">
+                {r.name} · {r.skinType} skin · {r.month}
+              </p>
+              <a class="review-p" href={productUrl(p)}>{brandName(p)} {p.short}</a>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="faq-h">
+    <div class="wrap faq-grid">
+      <div>
+        <p class="eyebrow">FAQ</p>
+        <h2 id="faq-h">Short answers</h2>
+        <a href="/contact#faq" class="link-arrow">All questions</a>
+      </div>
+      <div class="faq-list">
+        {
+          shortFaq.map((f) => (
+            <details class="faq-item">
+              <summary>{f.q}</summary>
+              <p>{f.a}</p>
+            </details>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+</Base>
+
+<script>
+  // Accessible tabs for the formula examples (arrow keys, home/end).
+  function initTabs() {
+    const list = document.querySelector<HTMLElement>('.fc-tabs');
+    if (!list || list.dataset.ready) return;
+    list.dataset.ready = '1';
+    const tabs = [...list.querySelectorAll<HTMLButtonElement>('[role="tab"]')];
+    const select = (t: HTMLButtonElement, focus = true) => {
+      tabs.forEach((x) => {
+        const on = x === t;
+        x.setAttribute('aria-selected', String(on));
+        x.tabIndex = on ? 0 : -1;
+        const panel = document.getElementById(x.getAttribute('aria-controls')!);
+        if (panel) {
+          panel.hidden = !on;
+          if (on) panel.querySelector('[data-bars]')?.classList.add('is-in');
+        }
+      });
+      if (focus) t.focus();
+    };
+    tabs.forEach((t, i) => {
+      t.addEventListener('click', () => select(t, false));
+      t.addEventListener('keydown', (e) => {
+        const k = e.key;
+        let n = -1;
+        if (k === 'ArrowRight' || k === 'ArrowDown') n = (i + 1) % tabs.length;
+        if (k === 'ArrowLeft' || k === 'ArrowUp') n = (i - 1 + tabs.length) % tabs.length;
+        if (k === 'Home') n = 0;
+        if (k === 'End') n = tabs.length - 1;
+        if (n >= 0) {
+          e.preventDefault();
+          select(tabs[n]);
+        }
+      });
+    });
+  }
+  document.addEventListener('astro:page-load', initTabs);
+</script>
+
+<style>
+  .hero {
+    padding-top: clamp(20px, 4vw, 56px);
+  }
+  .hero-grid {
+    display: grid;
+    gap: 28px;
+    padding-bottom: clamp(24px, 4vw, 48px);
+  }
+  .hero-eyebrow {
+    margin-bottom: 14px;
+  }
+  .hero h1 {
+    max-width: 13ch;
+  }
+  .hero-lede {
+    margin-top: 16px;
+  }
+  .hero-actions {
+    display: grid;
+    gap: 10px;
+    margin-top: 22px;
+  }
+  .hero-meta {
+    margin-top: 14px;
+  }
+  @media (min-width: 560px) {
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+    }
+  }
+  .readout {
+    border: 1px solid var(--ink);
+    background: var(--paper);
+    display: grid;
+    grid-template-columns: 40% minmax(0, 1fr);
+    align-self: start;
+  }
+  .readout-head {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--ink);
+    font-size: var(--fs-12);
+  }
+  .readout-img {
+    display: block;
+    border-right: 1px solid var(--hairline);
+  }
+  .readout-body {
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+  }
+  .readout-name {
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    line-height: 1.2;
+  }
+  .readout-name a {
+    text-decoration: none;
+  }
+  .readout-rows {
+    margin: 6px 0;
+    font-size: 11.5px;
+    border-top: 1px solid var(--hairline);
+  }
+  .readout-rows li {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 5px 0;
+    border-bottom: 1px solid var(--hairline);
+  }
+  .readout-rows .np {
+    color: var(--graphite);
+  }
+  .readout-buy {
+    margin-top: auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .readout-price {
+    font-size: var(--fs-18);
+    font-weight: 600;
+  }
+  @media (min-width: 900px) {
+    .hero-grid {
+      grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+      align-items: center;
+      gap: 48px;
+    }
+    .readout {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  .qp-grid {
+    display: grid;
+    gap: 28px;
+  }
+  .qp-copy {
+    display: grid;
+    gap: 14px;
+    justify-items: start;
+    align-content: start;
+  }
+  .qp-note {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .qp-steps {
+    border-top: 1px solid var(--ink);
+  }
+  .qp-steps li {
+    display: grid;
+    grid-template-columns: 48px minmax(0, 1fr);
+    gap: 12px;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--hairline);
+  }
+  .qp-n {
+    font-size: var(--fs-24);
+    color: var(--sage-deep);
+    line-height: 1;
+  }
+  .qp-q {
+    font-weight: 600;
+    font-size: var(--fs-20);
+    letter-spacing: -0.02em;
+  }
+  .qp-a {
+    color: var(--graphite);
+    font-size: var(--fs-14);
+    margin-top: 2px;
+  }
+  @media (min-width: 900px) {
+    .qp-grid {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+      gap: 56px;
+    }
+  }
+
+  .concerns {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    border-top: 1px solid var(--hairline);
+    border-left: 1px solid var(--hairline);
+  }
+  .concerns li {
+    display: flex;
+  }
+  .concern {
+    flex: 1;
+    position: relative;
+    display: grid;
+    gap: 6px;
+    align-content: start;
+    min-height: 150px;
+    padding: 14px 14px 40px;
+    background: var(--paper);
+    text-decoration: none;
+    transition: background-color var(--dur) var(--ease);
+  }
+  .concern:hover {
+    background: var(--sage-tint);
+  }
+  .concern-n {
+    font-size: 11.5px;
+    color: var(--graphite);
+  }
+  .concern-t {
+    font-weight: 600;
+    font-size: var(--fs-20);
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+  }
+  .concern-b {
+    font-size: var(--fs-13);
+    color: var(--graphite);
+  }
+  .concern-go {
+    position: absolute;
+    right: 12px;
+    bottom: 12px;
+    transition: transform var(--dur) var(--ease);
+  }
+  .concern:hover .concern-go {
+    transform: translateX(3px);
+  }
+  @media (min-width: 900px) {
+    .concerns {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  .ing-teaser {
+    display: grid;
+    gap: 20px;
+  }
+  .ing-copy {
+    margin-top: 10px;
+    max-width: 52ch;
+  }
+  .chip--all {
+    border-color: var(--ink);
+  }
+
+  .rb-teaser {
+    display: grid;
+    gap: 28px;
+    align-items: center;
+  }
+  .rb-teaser > div:first-child {
+    display: grid;
+    gap: 14px;
+    justify-items: start;
+  }
+  .rb-diagram {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border: 1px solid var(--ink);
+    background: var(--paper);
+  }
+  .rbd-col + .rbd-col {
+    border-left: 1px solid var(--hairline);
+  }
+  .rbd-t {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--hairline);
+    font-size: var(--fs-13);
+    color: var(--sage-deep);
+  }
+  .rbd-slot {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--hairline);
+    font-size: var(--fs-14);
+  }
+  .rbd-slot .mono {
+    font-size: 11px;
+    color: var(--graphite);
+    margin-right: 6px;
+  }
+  .rbd-tier {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 12px;
+    font-size: var(--fs-12);
+    background: var(--sage-tint);
+  }
+  @media (min-width: 900px) {
+    .rb-teaser {
+      grid-template-columns: 1fr 1fr;
+      gap: 56px;
+    }
+  }
+
+  .fc-grid {
+    display: grid;
+    gap: 24px;
+  }
+  .fc-copy {
+    display: grid;
+    gap: 14px;
+    align-content: start;
+  }
+  .fc-tabs {
+    display: grid;
+    gap: 6px;
+    margin-top: 8px;
+  }
+  .fc-tab {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 48px;
+    padding: 10px 14px;
+    text-align: left;
+    border: 1px solid var(--hairline);
+    background: var(--paper);
+    font-weight: 550;
+  }
+  .fc-tab .mono {
+    font-size: var(--fs-12);
+    color: var(--graphite);
+    font-weight: 400;
+  }
+  .fc-tab[aria-selected='true'] {
+    border-color: var(--ink);
+    box-shadow: inset 3px 0 0 var(--sage-deep);
+  }
+  .fc-panel {
+    display: grid;
+    gap: 10px;
+  }
+  @media (min-width: 900px) {
+    .fc-grid {
+      grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+      gap: 48px;
+    }
+  }
+
+  .brand-strip {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    border-top: 1px solid var(--hairline);
+    border-left: 1px solid var(--hairline);
+  }
+  .brand-strip a {
+    display: grid;
+    gap: 2px;
+    padding: 14px;
+    background: var(--paper);
+    text-decoration: none;
+    min-height: 64px;
+  }
+  .brand-strip a:hover {
+    background: var(--bone);
+  }
+  .bs-name {
+    font-weight: 600;
+    letter-spacing: -0.015em;
+  }
+  .bs-meta {
+    font-size: 11px;
+    color: var(--graphite);
+  }
+  @media (min-width: 640px) {
+    .brand-strip {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+  @media (min-width: 1100px) {
+    .brand-strip {
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+    }
+  }
+
+  .reviews {
+    display: grid;
+    border-top: 1px solid var(--hairline);
+    border-left: 1px solid var(--hairline);
+  }
+  .review {
+    display: grid;
+    gap: 8px;
+    padding: 18px;
+    background: var(--paper);
+    align-content: start;
+  }
+  .review-stars {
+    color: var(--ink);
+    letter-spacing: 2px;
+  }
+  .review-text {
+    font-size: var(--fs-18);
+    letter-spacing: -0.01em;
+    line-height: 1.35;
+  }
+  .review-p {
+    font-size: var(--fs-14);
+    font-weight: 550;
+  }
+  @media (min-width: 800px) {
+    .reviews {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  .faq-grid {
+    display: grid;
+    gap: 20px;
+  }
+  .faq-grid > div:first-child {
+    display: grid;
+    gap: 8px;
+    align-content: start;
+    justify-items: start;
+  }
+  .faq-list {
+    border-top: 1px solid var(--ink);
+  }
+  @media (min-width: 900px) {
+    .faq-grid {
+      grid-template-columns: minmax(0, 0.7fr) minmax(0, 1.3fr);
+      gap: 48px;
+    }
+  }
+</style>

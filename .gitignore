@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.astro/
+.vercel/
+_source/
+.lighthouse/
+test-results/
+*.log
+.DS_Store

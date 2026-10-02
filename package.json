@@ -1,0 +1,50 @@
+{
+  "name": "verum-concept",
+  "type": "module",
+  "version": "1.0.0",
+  "private": true,
+  "description": "VERUM — a Nuit Works concept skincare shop (fictional business).",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "check": "astro check",
+    "serve": "serve dist -l 4377 --no-clipboard",
+    "images:products": "node scripts/process-products.mjs",
+    "images:editorial": "node scripts/process-editorial.mjs",
+    "images:icons": "node scripts/make-icons.mjs",
+    "test:data": "node tests/data-audit.mjs",
+    "test:seo": "node tests/seo.mjs",
+    "test:paths": "node tests/paths.mjs",
+    "test:flow": "node tests/flow.mjs",
+    "test:lighthouse": "node scripts/lighthouse.mjs",
+    "test:aov": "esbuild src/lib/quiz.ts --bundle --platform=node --format=esm --outfile=.lighthouse/quiz.bundle.mjs --log-level=warning && esbuild src/lib/bundle.ts --bundle --platform=node --format=esm --outfile=.lighthouse/bundle.bundle.mjs --log-level=warning && node tests/aov.mjs",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "@astrojs/preact": "^6.0.5",
+    "@astrojs/sitemap": "^3.7.4",
+    "@fontsource/geist": "^5.3.0",
+    "@fontsource/geist-mono": "^5.3.0",
+    "@nanostores/persistent": "^1.3.5",
+    "@nanostores/preact": "^1.1.0",
+    "astro": "^7.3.5",
+    "nanostores": "^1.5.4",
+    "preact": "^10.29.8",
+    "satori": "^0.35.0",
+    "sharp": "^0.35.5"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.10",
+    "@fontsource-variable/geist": "^5.3.0",
+    "@fontsource-variable/geist-mono": "^5.3.0",
+    "chrome-launcher": "^1.2.2",
+    "lighthouse": "^13.5.0",
+    "playwright-core": "^1.63.0",
+    "serve": "^14.2.6",
+    "typescript": "^6.0.3"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  }
+}

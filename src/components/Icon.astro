@@ -1,0 +1,42 @@
+---
+interface Props {
+  name: 'search' | 'bag' | 'menu' | 'close' | 'arrow' | 'check' | 'chat' | 'plus' | 'minus' | 'compare' | 'eye' | 'shield' | 'truck' | 'store' | 'flask' | 'mail' | 'pin' | 'clock';
+  size?: number;
+  class?: string;
+}
+const { name, size = 20, class: cls } = Astro.props;
+const paths: Record<Props['name'], string> = {
+  search: '<circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/>',
+  bag: '<path d="M4.5 8h15l-1.2 12.5H5.7L4.5 8Z"/><path d="M8.5 10V6.5a3.5 3.5 0 0 1 7 0V10"/>',
+  menu: '<path d="M3.5 7h17M3.5 12h17M3.5 17h17"/>',
+  close: '<path d="M5.5 5.5l13 13M18.5 5.5l-13 13"/>',
+  arrow: '<path d="M4 12h15M13.5 6.5 19 12l-5.5 5.5"/>',
+  check: '<path d="M4.5 12.5 9.5 17.5 19.5 6.5"/>',
+  chat: '<path d="M20 11.5a8 8 0 0 1-11.8 7L4 19.8l1.3-4A8 8 0 1 1 20 11.5Z"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  minus: '<path d="M5 12h14"/>',
+  compare: '<path d="M8 4v16M16 4v16M3.5 8H8M16 16h4.5"/>',
+  eye: '<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="2.8"/>',
+  shield: '<path d="M12 3.5 19 6v5.5c0 4.3-3 7.6-7 9-4-1.4-7-4.7-7-9V6l7-2.5Z"/><path d="m8.8 12 2.2 2.2 4.2-4.4"/>',
+  truck: '<path d="M2.5 6.5h11v9h-11zM13.5 9.5h4l3 3v3h-7"/><circle cx="6.5" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/>',
+  store: '<path d="M4 9.5V20h16V9.5M3 9.5 5 4h14l2 5.5H3Z"/><path d="M9.5 20v-5.5h5V20"/>',
+  flask: '<path d="M9.5 3.5h5M10.5 3.5v5.2L5 18.2A1.5 1.5 0 0 0 6.3 20.5h11.4a1.5 1.5 0 0 0 1.3-2.3l-5.5-9.5V3.5"/><path d="M7.5 14h9"/>',
+  mail: '<path d="M3.5 6h17v12h-17z"/><path d="m3.5 6.5 8.5 7 8.5-7"/>',
+  pin: '<path d="M12 21s-6.5-6-6.5-11a6.5 6.5 0 0 1 13 0c0 5-6.5 11-6.5 11Z"/><circle cx="12" cy="10" r="2.3"/>',
+  clock: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
+};
+---
+<svg
+  class={cls}
+  width={size}
+  height={size}
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="1.5"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  aria-hidden="true"
+  focusable="false"
+  set:html={paths[name]}
+/>

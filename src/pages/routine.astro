@@ -1,0 +1,35 @@
+---
+import Base from '../layouts/Base.astro';
+import RoutineBuilder from '../islands/RoutineBuilder';
+import { breadcrumbLd } from '../lib/seo';
+import { tiers } from '../lib/bundle';
+---
+
+<Base
+  title="Routine builder · AM and PM, save up to 15% · VERUM"
+  description="Build your AM and PM skincare routine step by step, with conflict warnings, live bundle savings and a shareable link."
+  ogImage="/og/routine.png"
+  preloadCatalog
+  jsonld={[breadcrumbLd([{ name: 'Home', url: '/' }, { name: 'Routine builder', url: '/routine' }])]}
+>
+  <div class="wrap page-head">
+    <p class="eyebrow">Routine builder</p>
+    <h1>Build your AM and PM routine, save up to 15 percent.</h1>
+    <p class="lede">
+      Fill each step. Each different product counts once: {tiers.map((t) => `${t.minSteps} steps take ${t.percent}% off`).join(', ')}. Not sure? <a class="link" href="/quiz">The quiz fills it in for you</a>.
+    </p>
+  </div>
+  <div class="wrap routine-wrap">
+    <RoutineBuilder client:load />
+  </div>
+</Base>
+
+<style>
+  .page-head h1 {
+    max-width: 20ch;
+  }
+  .routine-wrap {
+    padding-bottom: var(--section-y);
+    min-height: 60vh;
+  }
+</style>

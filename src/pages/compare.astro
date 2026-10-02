@@ -1,0 +1,29 @@
+---
+import Base from '../layouts/Base.astro';
+import Compare from '../islands/Compare';
+import { breadcrumbLd } from '../lib/seo';
+---
+
+<Base
+  title="Compare skincare side by side · VERUM"
+  description="Compare up to three products: price per 10 ml, routine step, skin types, published ingredient strengths and fragrance. Share the link."
+  ogImage="/og/compare.png"
+  preloadCatalog
+  jsonld={[breadcrumbLd([{ name: 'Home', url: '/' }, { name: 'Compare', url: '/compare' }])]}
+>
+  <div class="wrap page-head">
+    <p class="eyebrow">Compare</p>
+    <h1>Compare products</h1>
+    <p class="lede">Up to three, side by side. Rows that differ are marked. Strengths appear only where the brand publishes them.</p>
+  </div>
+  <div class="wrap compare-wrap">
+    <Compare client:load />
+  </div>
+</Base>
+
+<style>
+  .compare-wrap {
+    padding-bottom: var(--section-y);
+    min-height: 50vh;
+  }
+</style>

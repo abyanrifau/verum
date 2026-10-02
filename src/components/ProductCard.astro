@@ -1,0 +1,265 @@
+---
+import { Picture } from 'astro:assets';
+import type { Product } from '../data/types';
+import { brandName, productImage, productUrl, stockSignal } from '../lib/catalog';
+import { stepLabel } from '../data/taxonomy';
+import { mvr } from '../lib/money';
+
+interface Props {
+  product: Product;
+  eager?: boolean;
+  /** fetchpriority=high: only for the one or two images most likely to be the LCP. */
+  priority?: boolean;
+  heading?: 'h2' | 'h3' | 'h4';
+  sizes?: string;
+  /** Extra data attributes for shop filtering. */
+  data?: Record<string, string>;
+  showCompare?: boolean;
+}
+const {
+  product: p,
+  eager = false,
+  priority = false,
+  heading = 'h3',
+  sizes = '(min-width: 1320px) 300px, (min-width: 1024px) 23vw, (min-width: 640px) 31vw, 47vw',
+  data = {},
+  showCompare = true,
+} = Astro.props;
+const H = heading;
+const url = productUrl(p);
+const brand = brandName(p);
+const stock = stockSignal(p);
+const flag = p.flags.includes('restocked') ? 'Restocked' : p.flags.includes('new') ? 'New' : p.flags.includes('bestseller') ? 'Bestseller' : null;
+const keyPub = p.keyIngredients.find((k) => k.concentration);
+---
+
+<article class="card" data-card={p.slug} {...data}>
+  <div class="card-media">
+    <span class="tile">
+      <Picture
+        src={productImage(p.images[0])}
+        formats={['avif', 'webp']}
+        fallbackFormat="webp"
+        widths={[200, 300, 420, 600]}
+        sizes={sizes}
+        alt=""
+        loading={eager ? 'eager' : 'lazy'}
+        fetchpriority={priority ? 'high' : 'auto'}
+        decoding={eager ? 'sync' : 'async'}
+        data-vt-img
+      />
+    </span>
+    <span class="card-code mono">{p.code}</span>
+    {flag && <span class="card-flag mono">{flag}</span>}
+  </div>
+  <div class="card-body">
+    <p class="card-brand">{brand}</p>
+    <H class="card-name"><a href={url} data-vt={p.slug}>{p.short}</a></H>
+    <p class="card-meta mono">
+      {p.size} · {stepLabel(p.step)}{keyPub && ` · ${keyPub.name} ${keyPub.concentration}`}
+    </p>
+    <div class="card-buy">
+      <p class="card-price mono">{mvr(p.price)}</p>
+      {stock.tone !== 'ok' && <p class:list={['card-stock mono', stock.tone]}>{stock.text}</p>}
+    </div>
+    <button
+      type="button"
+      class="btn btn--sm btn--block card-add"
+      data-add={p.code}
+      disabled={p.stock <= 0}
+      aria-label={`Add to cart: ${brand} ${p.short}, ${mvr(p.price)}`}
+    >
+      <span data-label="Add to cart">Add to cart</span>
+    </button>
+    {
+      showCompare && (
+        <div class="card-tools">
+          <button type="button" class="card-tool" data-compare={p.code} data-name={p.short} aria-pressed="false">
+            <span class="box" aria-hidden="true" />
+            Compare<span class="sr-only"> {p.short}</span>
+          </button>
+          <button type="button" class="card-tool card-quick" data-quick={p.slug}>
+            Quick view<span class="sr-only"> of {p.short}</span>
+          </button>
+        </div>
+      )
+    }
+  </div>
+</article>
+
+<style>
+  .card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    background: var(--paper);
+    min-width: 0;
+  }
+  .card-media {
+    position: relative;
+    display: block;
+    text-decoration: none;
+  }
+  .card-media :global(img) {
+    transition: transform 500ms var(--ease);
+  }
+  @media (hover: hover) {
+    .card:hover .card-media :global(img) {
+      transform: scale(1.03);
+    }
+  }
+  .card-code {
+    position: absolute;
+    left: 10px;
+    top: 9px;
+    font-size: 11px;
+    color: var(--graphite);
+  }
+  .card-flag {
+    position: absolute;
+    right: 8px;
+    top: 7px;
+    padding: 1px 6px;
+    font-size: 11px;
+    border: 1px solid var(--sage-deep);
+    color: var(--sage-deep);
+    background: var(--paper);
+  }
+  .card-body {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    padding: 12px 12px 12px;
+    gap: 2px;
+  }
+  .card-brand {
+    font-size: var(--fs-13);
+    color: var(--graphite);
+  }
+  .card-name {
+    font-size: var(--fs-16);
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    line-height: 1.22;
+  }
+  .card-name a {
+    text-decoration: none;
+  }
+  .card-name a::after {
+    /* Make the whole text block a comfortable target without nesting buttons. */
+    content: '';
+    position: absolute;
+    inset: 0 0 auto 0;
+    aspect-ratio: 1 / 1;
+  }
+  .card-name a:hover {
+    text-decoration: underline;
+  }
+  .card-meta {
+    font-size: 11.5px;
+    color: var(--graphite);
+    margin-top: 2px;
+  }
+  .card-buy {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 2px 10px;
+    margin-top: auto;
+    padding-top: 10px;
+  }
+  .card-price {
+    font-size: var(--fs-16);
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .card-stock {
+    font-size: 11.5px;
+  }
+  .card-stock.low {
+    color: var(--ink);
+  }
+  .card-stock.low::before {
+    content: '';
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    margin-right: 5px;
+    border-radius: 50%;
+    background: var(--sage-deep);
+    vertical-align: 1px;
+  }
+  .card-stock.out {
+    color: var(--graphite);
+  }
+  .card-add {
+    margin-top: 8px;
+    min-height: 42px;
+    position: relative;
+    z-index: 1;
+  }
+  .card-add:global(.is-added) {
+    --btn-bg: var(--sage-deep);
+    --btn-bd: var(--sage-deep);
+  }
+  .card-tools {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 4px;
+    position: relative;
+    z-index: 1;
+  }
+  .card-tool {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-height: 34px;
+    padding: 0 2px;
+    border: 0;
+    background: none;
+    color: var(--graphite);
+    font-size: var(--fs-13);
+  }
+  .card-tool:hover {
+    color: var(--ink);
+  }
+  .box {
+    width: 14px;
+    height: 14px;
+    border: 1px solid var(--line-strong);
+    border-radius: 2px;
+    display: inline-grid;
+    place-items: center;
+  }
+  .card-tool[aria-pressed='true'] {
+    color: var(--ink);
+  }
+  .card-tool[aria-pressed='true'] .box {
+    background: var(--sage-deep);
+    border-color: var(--sage-deep);
+  }
+  .card-tool[aria-pressed='true'] .box::after {
+    content: '';
+    width: 7px;
+    height: 4px;
+    border-left: 1.5px solid #fff;
+    border-bottom: 1.5px solid #fff;
+    transform: rotate(-45deg) translate(1px, -1px);
+  }
+  .card-quick {
+    display: none;
+  }
+  @media (min-width: 1024px) and (hover: hover) {
+    .card-quick {
+      display: inline-flex;
+    }
+  }
+  @media (max-width: 400px) {
+    .card-body {
+      padding: 10px 10px 10px;
+    }
+    .card-name {
+      font-size: var(--fs-15);
+    }
+  }
+</style>

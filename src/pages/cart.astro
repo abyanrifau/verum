@@ -1,0 +1,40 @@
+---
+import Base from '../layouts/Base.astro';
+import CartPage from '../islands/CartPage';
+import TrustStrip from '../components/TrustStrip.astro';
+import { breadcrumbLd } from '../lib/seo';
+---
+
+<Base
+  title="Your cart · VERUM"
+  description="Your VERUM cart with bundle savings applied automatically. Free same-day delivery in Malé. One-page checkout, no account."
+  ogImage="/og/cart.png"
+  preloadCatalog
+  jsonld={[breadcrumbLd([{ name: 'Home', url: '/' }, { name: 'Cart', url: '/cart' }])]}
+>
+  <div class="wrap page-head">
+    <h1>Your cart</h1>
+  </div>
+  <div class="wrap cart-wrap">
+    <CartPage client:load />
+    <aside class="cart-side" aria-label="Why shop with VERUM">
+      <TrustStrip compact />
+    </aside>
+  </div>
+</Base>
+
+<style>
+  .cart-wrap {
+    display: grid;
+    gap: 24px;
+    padding-bottom: var(--section-y);
+    min-height: 50vh;
+  }
+  @media (min-width: 1000px) {
+    .cart-wrap {
+      grid-template-columns: minmax(0, 640px) minmax(0, 1fr);
+      gap: 48px;
+      align-items: start;
+    }
+  }
+</style>
